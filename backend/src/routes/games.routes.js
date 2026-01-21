@@ -1,6 +1,7 @@
 import express from 'express';
 import { getConnection } from '../db.js';
 import { searchGameByName } from '../services/igdb.service.js';
+import { reverseGeocodeOSM } from '../services/geocoding.service.js';
 
 const router = express.Router();
 
@@ -78,6 +79,44 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error deleting game', error: err.message });
+  }
+});
+
+// MAP geocoding route
+router.post('/map/location', async (req, res) => {
+  const { lat, lng } = req.body;
+
+  if (!lat || !lng) {
+    return res.status(400).json({ message: 'Lat and lng are required' });
+  }
+
+  try {
+    // 1️⃣ Reverse geocoding
+    const location = await reverseGeocodeOSM(lat, lng);
+
+    // 2️⃣ Guardar en MySQL
+    const connection = await getConnection();
+    const [result] = await connection.query(
+      `INSERT INTO user_locations (lat, lng, city, country)
+       VALUES (?, ?, ?, ?)`,
+      [lat, lng, location.city ?? null, location.country ?? null]
+    );
+    await connection.end();
+
+    // 3️⃣ Respuesta
+    res.status(201).json({
+      id: result.insertId,
+      lat,
+      lng,
+      city: location.city,
+      country: location.country,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: 'Error saving location',
+      error: error.message,
+    });
   }
 });
 
