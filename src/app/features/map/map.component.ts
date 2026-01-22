@@ -16,8 +16,10 @@ export class MapComponent implements AfterViewInit {
 
   locationIcon = L.icon({
     iconUrl: 'assets/marker-icon.png',
+    iconSize: [17.5, 30],
     iconRetinaUrl: 'assets/marker-icon-2x.png',
     shadowUrl: 'assets/marker-shadow.png',
+    shadowAnchor: [9, 30],
   });
 
   ngAfterViewInit() {
@@ -42,7 +44,7 @@ export class MapComponent implements AfterViewInit {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 0,
-      }
+      },
     );
   }
 
@@ -54,7 +56,7 @@ export class MapComponent implements AfterViewInit {
     }).addTo(this.map);
 
     const marker = L.marker([lat, lng], { draggable: true, icon: this.locationIcon }).addTo(
-      this.map
+      this.map,
     );
 
     marker.on('dragend', (event) => {
