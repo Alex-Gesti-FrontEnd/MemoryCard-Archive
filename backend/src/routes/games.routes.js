@@ -103,7 +103,7 @@ router.get('/map/location', async (req, res) => {
   }
 });
 
-// Tiendas de videojuegos alrededor de una ubicación
+// Localization of stores route
 router.get('/map/stores', async (req, res) => {
   const { lat, lng } = req.query;
 
@@ -113,9 +113,10 @@ router.get('/map/stores', async (req, res) => {
     const stores = await searchGameStores(lat, lng);
 
     const result = stores.map((s) => ({
-      name: s.tags?.name ?? 'Game store',
+      name: s.tags?.name ?? 'Unknown shop',
       lat: s.lat ?? s.center?.lat,
       lng: s.lon ?? s.center?.lon,
+      url: s.tags?.website ?? null,
     }));
 
     res.json(result);

@@ -12,7 +12,8 @@ export class MapComponent implements AfterViewInit {
   private map!: L.Map;
   mapService = inject(MapService);
 
-  locationText = signal<string>('Detecting location...');
+  private userMarker!: L.Marker;
+  private storeMarkers: L.Marker[] = [];
 
   locationIcon = L.icon({
     iconUrl: 'assets/marker-icon.png',
@@ -22,9 +23,16 @@ export class MapComponent implements AfterViewInit {
     shadowAnchor: [9, 30],
   });
 
+  storeIcon = L.icon({
+    iconUrl: 'assets/marker-store-icon.png',
+    iconSize: [12, 20],
+    iconRetinaUrl: 'assets/marker-store-icon-2x.png',
+    shadowUrl: 'assets/marker-shadow.png',
+    shadowAnchor: [6, 20],
+  });
+
   ngAfterViewInit() {
     if (!navigator.geolocation) {
-      this.locationText.set('Geolocation is not supported');
       return;
     }
 
@@ -34,10 +42,8 @@ export class MapComponent implements AfterViewInit {
         const lng = position.coords.longitude;
 
         this.initMap(lat, lng);
-        this.loadLocationInfo(lat, lng);
       },
       (error) => {
-        this.locationText.set('No se pudo obtener la ubicación');
         console.error(error);
       },
       {
@@ -49,27 +55,20 @@ export class MapComponent implements AfterViewInit {
   }
 
   private initMap(lat: number, lng: number) {
-    this.map = L.map('map').setView([lat, lng], 6);
+    this.map = L.map('map').setView([lat, lng], 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(this.map);
 
-    const marker = L.marker([lat, lng], { draggable: true, icon: this.locationIcon }).addTo(
-      this.map,
-    );
+    this.userMarker = L.marker([lat, lng], { draggable: true, icon: this.locationIcon })
+      .addTo(this.map)
+      .bindPopup('Tu ubicación')
+      .openPopup();
 
-    marker.on('dragend', (event) => {
+    this.userMarker.on('dragend', (event) => {
       const pos = (event.target as L.Marker).getLatLng();
-      this.onLocationChanged(pos.lat, pos.lng);
-    });
-
-    this.mapService.getGameStores(lat, lng).subscribe((stores) => {
-      stores.forEach((store) => {
-        L.marker([store.lat, store.lng], { icon: this.locationIcon })
-          .addTo(this.map)
-          .bindPopup(store.name);
-      });
+      this.updateStores(pos.lat, pos.lng);
     });
 
     const LocateControl = L.Control.extend({
@@ -82,9 +81,9 @@ export class MapComponent implements AfterViewInit {
         btn.style.cursor = 'pointer';
 
         btn.onclick = () => {
-          const pos = marker.getLatLng();
-          this.map.setView(pos, 12);
-          marker.openPopup();
+          const pos = this.userMarker.getLatLng();
+          this.map.setView(pos, 14);
+          this.userMarker.openPopup();
         };
 
         return btn;
@@ -92,21 +91,32 @@ export class MapComponent implements AfterViewInit {
     });
 
     new LocateControl({ position: 'topleft' }).addTo(this.map);
+
+    this.updateStores(lat, lng);
   }
 
-  private loadLocationInfo(lat: number, lng: number) {
-    this.mapService.reverseLocation(lat, lng).subscribe({
-      next: (res) => {
-        this.locationText.set(`${res.city ?? ''} ${res.country ?? ''}`.trim());
-      },
-      error: (err) => {
-        console.error('Error getting location info', err);
-        this.locationText.set('Unknown location');
-      },
+  private updateStores(lat: number, lng: number) {
+    const zoom = this.map.getZoom();
+    const radius = 10000;
+
+    this.storeMarkers.forEach((m) => this.map.removeLayer(m));
+    this.storeMarkers = [];
+
+    this.mapService.getGameStores(lat, lng, radius).subscribe((stores) => {
+      stores.forEach((store) => {
+        const storeUrl =
+          store.url ?? `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`;
+        const popupContent = `
+          <div>
+            <b><a href="${storeUrl}" target="_blank">${store.name}</a></b>
+          </div>
+        `;
+        const marker = L.marker([store.lat, store.lng], { icon: this.storeIcon })
+          .addTo(this.map)
+          .bindPopup(popupContent);
+
+        this.storeMarkers.push(marker);
+      });
     });
-  }
-
-  private onLocationChanged(lat: number, lng: number) {
-    this.loadLocationInfo(lat, lng);
   }
 }

@@ -15,13 +15,14 @@ export class MapService {
     }>(`${this.apiUrl}/map/location?lat=${lat}&lng=${lng}`);
   }
 
-  getGameStores(lat: number, lng: number) {
+  getGameStores(lat: number, lng: number, radius: number) {
     return this.http.get<
       {
         name: string;
         lat: number;
         lng: number;
+        url?: string;
       }[]
-    >(`http://localhost:3000/api/games/map/stores?lat=${lat}&lng=${lng}`);
+    >(`http://localhost:3000/api/games/map/stores?lat=${lat}&lng=${lng}&radius=${radius}`);
   }
 }
