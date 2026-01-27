@@ -64,6 +64,14 @@ export class MapComponent implements AfterViewInit {
       this.onLocationChanged(pos.lat, pos.lng);
     });
 
+    this.mapService.getGameStores(lat, lng).subscribe((stores) => {
+      stores.forEach((store) => {
+        L.marker([store.lat, store.lng], { icon: this.locationIcon })
+          .addTo(this.map)
+          .bindPopup(store.name);
+      });
+    });
+
     const LocateControl = L.Control.extend({
       onAdd: () => {
         const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
@@ -100,14 +108,5 @@ export class MapComponent implements AfterViewInit {
 
   private onLocationChanged(lat: number, lng: number) {
     this.loadLocationInfo(lat, lng);
-
-    this.mapService.saveLocation(lat, lng).subscribe({
-      next: (res) => {
-        console.log('Location saved:', res);
-      },
-      error: (err) => {
-        console.error('Error saving location', err);
-      },
-    });
   }
 }

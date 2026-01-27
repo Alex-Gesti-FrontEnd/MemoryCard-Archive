@@ -1,6 +1,7 @@
 import express from 'express';
 import { getConnection } from '../db.js';
 import { searchGameByName } from '../services/igdb.service.js';
+import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
 
 const router = express.Router();
@@ -43,7 +44,7 @@ router.post('/', async (req, res) => {
     const connection = await getConnection();
     const [result] = await connection.query(
       'INSERT INTO games (name, platform, region, genre, releaseDate, avgPrice, image) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, platform, region, genre, releaseDate, avgPrice, image]
+      [name, platform, region, genre, releaseDate, avgPrice, image],
     );
     await connection.end();
     res.status(201).json({ id: result.insertId, ...req.body });
@@ -60,7 +61,7 @@ router.put('/:id', async (req, res) => {
     const connection = await getConnection();
     await connection.query(
       'UPDATE games SET name=?, platform=?, region=?, genre=?, releaseDate=?, avgPrice=?, image=? WHERE id=?',
-      [name, platform, region, genre, releaseDate, avgPrice, image, id]
+      [name, platform, region, genre, releaseDate, avgPrice, image, id],
     );
     await connection.end();
     res.json({ id, ...req.body });
@@ -83,40 +84,43 @@ router.delete('/:id', async (req, res) => {
 });
 
 // MAP geocoding route
-router.post('/map/location', async (req, res) => {
-  const { lat, lng } = req.body;
+router.get('/map/location', async (req, res) => {
+  const { lat, lng } = req.query;
 
   if (!lat || !lng) {
     return res.status(400).json({ message: 'Lat and lng are required' });
   }
 
   try {
-    // 1️⃣ Reverse geocoding
     const location = await reverseGeocodeOSM(lat, lng);
-
-    // 2️⃣ Guardar en MySQL
-    const connection = await getConnection();
-    const [result] = await connection.query(
-      `INSERT INTO user_locations (lat, lng, city, country)
-       VALUES (?, ?, ?, ?)`,
-      [lat, lng, location.city ?? null, location.country ?? null]
-    );
-    await connection.end();
-
-    // 3️⃣ Respuesta
-    res.status(201).json({
-      id: result.insertId,
-      lat,
-      lng,
-      city: location.city,
-      country: location.country,
-    });
+    res.json(location);
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Error saving location',
+      message: 'OSM reverse geocoding error',
       error: error.message,
     });
+  }
+});
+
+// Tiendas de videojuegos alrededor de una ubicación
+router.get('/map/stores', async (req, res) => {
+  const { lat, lng } = req.query;
+
+  if (!lat || !lng) return res.status(400).json({ message: 'lat and lng required' });
+
+  try {
+    const stores = await searchGameStores(lat, lng);
+
+    const result = stores.map((s) => ({
+      name: s.tags?.name ?? 'Game store',
+      lat: s.lat ?? s.center?.lat,
+      lng: s.lon ?? s.center?.lon,
+    }));
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: 'Overpass error', error: err.message });
   }
 });
 

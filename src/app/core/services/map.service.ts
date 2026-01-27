@@ -15,16 +15,13 @@ export class MapService {
     }>(`${this.apiUrl}/map/location?lat=${lat}&lng=${lng}`);
   }
 
-  saveLocation(lat: number, lng: number) {
-    return this.http.post<{
-      id: number;
-      lat: number;
-      lng: number;
-      city?: string;
-      country?: string;
-    }>(`${this.apiUrl}/map/location`, {
-      lat,
-      lng,
-    });
+  getGameStores(lat: number, lng: number) {
+    return this.http.get<
+      {
+        name: string;
+        lat: number;
+        lng: number;
+      }[]
+    >(`http://localhost:3000/api/games/map/stores?lat=${lat}&lng=${lng}`);
   }
 }
