@@ -1,23 +1,19 @@
-export async function searchGameStores(lat, lng) {
+export async function searchGameStores(lat, lng, radius, types) {
+  const blocks = types
+    .map(
+      (type) => `
+        node["shop"="${type}"](around:${radius}, ${lat}, ${lng});
+        way["shop"="${type}"](around:${radius}, ${lat}, ${lng});
+      `,
+    )
+    .join('\n');
+
   const query = `
     [out:json];
     (
-      node["shop"="video_games"](around:20000, ${lat}, ${lng});
-      way["shop"="video_games"](around:20000, ${lat}, ${lng});
-      
-      node["shop"="electronics"](around:20000, ${lat}, ${lng});
-      way["shop"="electronics"](around:20000, ${lat}, ${lng});
-      
-      node["shop"="computer"](around:20000, ${lat}, ${lng});
-      way["shop"="computer"](around:20000, ${lat}, ${lng});
-      
-      node["shop"="department_store"](around:20000, ${lat}, ${lng});
-      way["shop"="department_store"](around:20000, ${lat}, ${lng});
-      
-      node["shop"="shopping_centre"](around:20000, ${lat}, ${lng});
-      way["shop"="shopping_centre"](around:20000, ${lat}, ${lng});
+      ${blocks}
     );
-    out center;
+    out center tags;
   `;
 
   const res = await fetch('https://overpass-api.de/api/interpreter', {

@@ -15,7 +15,14 @@ export class MapService {
     }>(`${this.apiUrl}/map/location?lat=${lat}&lng=${lng}`);
   }
 
-  getGameStores(lat: number, lng: number, radius: number) {
+  getGameStores(lat: number, lng: number, radius: number, types: string[]) {
+    const params = new URLSearchParams({
+      lat: lat.toString(),
+      lng: lng.toString(),
+      radius: radius.toString(),
+      types: types.join(','),
+    });
+
     return this.http.get<
       {
         name: string;
@@ -23,6 +30,6 @@ export class MapService {
         lng: number;
         url?: string;
       }[]
-    >(`http://localhost:3000/api/games/map/stores?lat=${lat}&lng=${lng}&radius=${radius}`);
+    >(`http://localhost:3000/api/games/map/stores?${params}`);
   }
 }

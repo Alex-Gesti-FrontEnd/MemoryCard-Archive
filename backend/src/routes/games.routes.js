@@ -105,19 +105,30 @@ router.get('/map/location', async (req, res) => {
 
 // Localization of stores route
 router.get('/map/stores', async (req, res) => {
-  const { lat, lng } = req.query;
+  const { lat, lng, radius, types } = req.query;
 
-  if (!lat || !lng) return res.status(400).json({ message: 'lat and lng required' });
+  if (!lat || !lng || !radius || !types)
+    return res.status(400).json({ message: 'lat, lng, radius and types are required' });
+
+  const typesArray = types.split(',');
 
   try {
-    const stores = await searchGameStores(lat, lng);
+    const stores = await searchGameStores(
+      parseFloat(lat),
+      parseFloat(lng),
+      parseInt(radius),
+      typesArray,
+    );
 
-    const result = stores.map((s) => ({
-      name: s.tags?.name ?? 'Unknown shop',
-      lat: s.lat ?? s.center?.lat,
-      lng: s.lon ?? s.center?.lon,
-      url: s.tags?.website ?? null,
-    }));
+    const result = stores
+      .map((s) => ({
+        name: s.tags?.name ?? 'Unknown shop',
+        lat: s.lat ?? s.center?.lat,
+        lng: s.lon ?? s.center?.lon,
+        url: s.tags?.website ?? null,
+        category: classifyStore(s),
+      }))
+      .filter((s) => typesArray.includes(s.category));
 
     res.json(result);
   } catch (err) {

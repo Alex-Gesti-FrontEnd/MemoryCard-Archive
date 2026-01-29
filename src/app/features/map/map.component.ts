@@ -4,16 +4,25 @@ import { MapService } from '../../core/services/map.service';
 
 @Component({
   selector: 'app-map',
-  imports: [],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss',
 })
 export class MapComponent implements AfterViewInit {
   private map!: L.Map;
-  mapService = inject(MapService);
-
   private userMarker!: L.Marker;
   private storeMarkers: L.Marker[] = [];
+
+  mapService = inject(MapService);
+
+  selectedTypes: string[] = [
+    'video_games',
+    'second_hand',
+    'electronics',
+    'department_store',
+    'shopping_centre',
+  ];
+
+  selectedRadius = 10000;
 
   locationIcon = L.icon({
     iconUrl: 'assets/marker-icon.png',
@@ -32,25 +41,11 @@ export class MapComponent implements AfterViewInit {
   });
 
   ngAfterViewInit() {
-    if (!navigator.geolocation) {
-      return;
-    }
-
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        this.initMap(lat, lng);
+      (pos) => {
+        this.initMap(pos.coords.latitude, pos.coords.longitude);
       },
-      (error) => {
-        console.error(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
+      (err) => console.error(err),
     );
   }
 
@@ -61,10 +56,9 @@ export class MapComponent implements AfterViewInit {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(this.map);
 
-    this.userMarker = L.marker([lat, lng], { draggable: true, icon: this.locationIcon })
-      .addTo(this.map)
-      .bindPopup('Tu ubicación')
-      .openPopup();
+    this.userMarker = L.marker([lat, lng], { draggable: true, icon: this.locationIcon }).addTo(
+      this.map,
+    );
 
     this.userMarker.on('dragend', (event) => {
       const pos = (event.target as L.Marker).getLatLng();
@@ -75,48 +69,108 @@ export class MapComponent implements AfterViewInit {
       onAdd: () => {
         const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
         btn.innerHTML = '\u{1F4CD}';
-        btn.title = 'Centrar en mi ubicación';
         btn.style.width = '34px';
         btn.style.height = '34px';
         btn.style.cursor = 'pointer';
-
         btn.onclick = () => {
           const pos = this.userMarker.getLatLng();
           this.map.setView(pos, 14);
-          this.userMarker.openPopup();
         };
-
         return btn;
       },
     });
 
+    const SelectShopType = L.Control.extend({
+      onAdd: () => {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        const select = document.createElement('select');
+
+        select.innerHTML = `
+          <option value="all">All types</option>
+          <option value="videogames">Videogames</option>
+          <option value="general">General Stores</option>
+        `;
+
+        select.onchange = () => {
+          const value = select.value;
+
+          if (value === 'all') {
+            this.selectedTypes = [
+              'video_games',
+              'second_hand',
+              'electronics',
+              'department_store',
+              'shopping_centre',
+            ];
+          }
+
+          if (value === 'videogames') {
+            this.selectedTypes = ['video_games', 'electronics', 'second_hand'];
+          }
+
+          if (value === 'general') {
+            this.selectedTypes = ['department_store', 'shopping_centre'];
+          }
+
+          const pos = this.userMarker.getLatLng();
+          this.updateStores(pos.lat, pos.lng);
+        };
+
+        container.appendChild(select);
+        L.DomEvent.disableClickPropagation(container);
+        return container;
+      },
+    });
+
+    const SelectRadius = L.Control.extend({
+      onAdd: () => {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        const select = document.createElement('select');
+
+        select.innerHTML = `
+          <option value="2000">2 km</option>
+          <option value="5000">5 km</option>
+          <option value="10000" selected>10 km</option>
+          <option value="20000">20 km</option>
+        `;
+
+        select.onchange = () => {
+          this.selectedRadius = Number(select.value);
+          const pos = this.userMarker.getLatLng();
+          this.updateStores(pos.lat, pos.lng);
+        };
+
+        container.appendChild(select);
+        L.DomEvent.disableClickPropagation(container);
+        return container;
+      },
+    });
+
     new LocateControl({ position: 'topleft' }).addTo(this.map);
+    new SelectShopType({ position: 'topright' }).addTo(this.map);
+    new SelectRadius({ position: 'topright' }).addTo(this.map);
 
     this.updateStores(lat, lng);
   }
 
   private updateStores(lat: number, lng: number) {
-    const zoom = this.map.getZoom();
-    const radius = 10000;
-
     this.storeMarkers.forEach((m) => this.map.removeLayer(m));
     this.storeMarkers = [];
 
-    this.mapService.getGameStores(lat, lng, radius).subscribe((stores) => {
-      stores.forEach((store) => {
-        const storeUrl =
-          store.url ?? `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`;
-        const popupContent = `
-          <div>
-            <b><a href="${storeUrl}" target="_blank">${store.name}</a></b>
-          </div>
-        `;
-        const marker = L.marker([store.lat, store.lng], { icon: this.storeIcon })
-          .addTo(this.map)
-          .bindPopup(popupContent);
+    this.mapService
+      .getGameStores(lat, lng, this.selectedRadius, this.selectedTypes)
+      .subscribe((stores) => {
+        stores.forEach((store) => {
+          const storeUrl =
+            store.url ??
+            `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`;
 
-        this.storeMarkers.push(marker);
+          const marker = L.marker([store.lat, store.lng], { icon: this.storeIcon })
+            .addTo(this.map)
+            .bindPopup(`<b><a href="${storeUrl}" target="_blank">${store.name}</a></b>`);
+
+          this.storeMarkers.push(marker);
+        });
       });
-    });
   }
 }
