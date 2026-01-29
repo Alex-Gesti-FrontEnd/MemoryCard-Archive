@@ -120,15 +120,12 @@ router.get('/map/stores', async (req, res) => {
       typesArray,
     );
 
-    const result = stores
-      .map((s) => ({
-        name: s.tags?.name ?? 'Unknown shop',
-        lat: s.lat ?? s.center?.lat,
-        lng: s.lon ?? s.center?.lon,
-        url: s.tags?.website ?? null,
-        category: classifyStore(s),
-      }))
-      .filter((s) => typesArray.includes(s.category));
+    const result = stores.map((s) => ({
+      name: s.tags?.name ?? 'Unknown shop',
+      lat: s.lat ?? s.center?.lat,
+      lng: s.lon ?? s.center?.lon,
+      url: s.tags?.website ?? null,
+    }));
 
     res.json(result);
   } catch (err) {

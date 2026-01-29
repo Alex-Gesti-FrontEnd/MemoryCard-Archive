@@ -88,6 +88,7 @@ export class MapComponent implements AfterViewInit {
         select.innerHTML = `
           <option value="all">All types</option>
           <option value="videogames">Videogames</option>
+          <option value="electronics">Electronics</option>
           <option value="general">General Stores</option>
         `;
 
@@ -105,7 +106,11 @@ export class MapComponent implements AfterViewInit {
           }
 
           if (value === 'videogames') {
-            this.selectedTypes = ['video_games', 'electronics', 'second_hand'];
+            this.selectedTypes = ['video_games', 'second_hand'];
+          }
+
+          if (value === 'electronics') {
+            this.selectedTypes = ['electronics'];
           }
 
           if (value === 'general') {
