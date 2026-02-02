@@ -32,4 +32,14 @@ export class MapService {
       }[]
     >(`http://localhost:3000/api/games/map/stores?${params}`);
   }
+
+  getRoute(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+    return this.http.get<{
+      duration: number;
+      distance: number;
+      geometry: any;
+    }>(
+      `${this.apiUrl}/map/route?fromLat=${fromLat}&fromLng=${fromLng}&toLat=${toLat}&toLng=${toLng}`,
+    );
+  }
 }

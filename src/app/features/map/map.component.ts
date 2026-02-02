@@ -11,6 +11,7 @@ export class MapComponent implements AfterViewInit {
   private map!: L.Map;
   private userMarker!: L.Marker;
   private storeMarkers: L.Marker[] = [];
+  private routeLayer!: L.GeoJSON;
 
   mapService = inject(MapService);
 
@@ -62,6 +63,12 @@ export class MapComponent implements AfterViewInit {
 
     this.userMarker.on('dragend', (event) => {
       const pos = (event.target as L.Marker).getLatLng();
+
+      if (this.routeLayer) {
+        this.map.removeLayer(this.routeLayer);
+        this.routeLayer = undefined!;
+      }
+
       this.updateStores(pos.lat, pos.lng);
     });
 
@@ -174,8 +181,51 @@ export class MapComponent implements AfterViewInit {
             .addTo(this.map)
             .bindPopup(`<b><a href="${storeUrl}" target="_blank">${store.name}</a></b>`);
 
+          marker.on('click', () => this.showRouteTo(store.lat, store.lng));
           this.storeMarkers.push(marker);
         });
       });
+  }
+
+  private showRouteTo(storeLat: number, storeLng: number) {
+    const userPos = this.userMarker.getLatLng();
+
+    const loadingPopup = L.popup()
+      .setLatLng([storeLat, storeLng])
+      .setContent('Calculating route...')
+      .openOn(this.map);
+
+    this.mapService.getRoute(userPos.lat, userPos.lng, storeLat, storeLng).subscribe({
+      next: (route) => {
+        this.map.removeLayer(loadingPopup);
+
+        if (!route?.geometry) {
+          L.popup().setLatLng([storeLat, storeLng]).setContent('Route not found').openOn(this.map);
+          return;
+        }
+
+        if (this.routeLayer) this.map.removeLayer(this.routeLayer);
+
+        this.routeLayer = L.geoJSON(route.geometry, {
+          style: { color: 'blue', weight: 4 },
+        }).addTo(this.map);
+
+        const mins = Math.ceil((route.distance / 1000 / 4.5) * 60);
+        const km = (route.distance / 1000).toFixed(1);
+
+        L.popup()
+          .setLatLng([storeLat, storeLng])
+          .setContent(`${km} km, approx. ${mins} min`)
+          .openOn(this.map);
+      },
+      error: (err) => {
+        console.error('Error calculating route:', err);
+        this.map.removeLayer(loadingPopup);
+        L.popup()
+          .setLatLng([storeLat, storeLng])
+          .setContent('Error calculating route.')
+          .openOn(this.map);
+      },
+    });
   }
 }

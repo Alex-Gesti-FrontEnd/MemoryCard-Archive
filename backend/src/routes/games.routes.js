@@ -133,4 +133,34 @@ router.get('/map/stores', async (req, res) => {
   }
 });
 
+router.get('/map/route', async (req, res) => {
+  const { fromLat, fromLng, toLat, toLng } = req.query;
+
+  if (!fromLat || !fromLng || !toLat || !toLng) {
+    return res.status(400).json({ message: 'fromLat, fromLng, toLat, toLng required' });
+  }
+
+  try {
+    const url = `http://router.project-osrm.org/route/v1/foot/${fromLng},${fromLat};${toLng},${toLat}?overview=simplified&geometries=geojson`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.routes || data.routes.length === 0) {
+      return res.status(400).json({ message: 'No route found', raw: data });
+    }
+
+    const route = data.routes[0];
+
+    res.json({
+      duration: route.duration,
+      distance: route.distance,
+      geometry: route.geometry,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Routing error', error: err.message });
+  }
+});
+
 export default router;
