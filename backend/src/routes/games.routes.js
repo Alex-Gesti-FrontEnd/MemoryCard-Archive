@@ -122,11 +122,26 @@ router.get('/map/stores', async (req, res) => {
 
     const result = stores.map((s) => {
       const tags = s.tags || {};
+      const name = (tags.name || '').toLowerCase();
+
+      const knowSellers =
+        name.includes('game') ||
+        name.includes('games') ||
+        name.includes('gaming') ||
+        name.includes('mediamarkt') ||
+        name.includes('fnac') ||
+        name.includes('cex') ||
+        name.includes('carrefour') ||
+        name.includes('corte inglés') ||
+        name.includes('cash converters') ||
+        name.includes('xtralife');
 
       const probability =
-        tags.shop === 'video_games' || tags.second_hand === 'yes'
+        tags.shop === 'video_games' || tags.second_hand === 'yes' || knowSellers
           ? 'high'
-          : tags.shop === 'electronics' || tags.shop === 'department_store'
+          : tags.shop === 'electronics' ||
+              tags.shop === 'department_store' ||
+              tags.shop === 'shopping_centre'
             ? 'medium'
             : 'low';
 

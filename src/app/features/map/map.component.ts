@@ -239,7 +239,7 @@ export class MapComponent implements AfterViewInit {
               `Probability: ${probability}<br>` +
               `Contact: ${(marker as any).store.phone ?? 'Not available'}<br>` +
               `Opening Hours: ${(marker as any).store.openingHours ?? 'Not available'}<br>` +
-              `${km} km, approx. ${mins} min`,
+              `Route: ${km} km, approx. ${mins} min`,
           )
           .openOn(this.map);
       },
