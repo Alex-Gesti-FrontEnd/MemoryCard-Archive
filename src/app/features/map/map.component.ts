@@ -23,7 +23,7 @@ export class MapComponent implements AfterViewInit {
     'shopping_centre',
   ];
 
-  selectedRadius = 10000;
+  selectedRadius = 2000;
 
   locationIcon = L.icon({
     iconUrl: 'assets/marker-icon.png',
@@ -140,9 +140,9 @@ export class MapComponent implements AfterViewInit {
         const select = document.createElement('select');
 
         select.innerHTML = `
-          <option value="2000">2 km</option>
+          <option value="2000" selected>2 km</option>
           <option value="5000">5 km</option>
-          <option value="10000" selected>10 km</option>
+          <option value="10000">10 km</option>
           <option value="20000">20 km</option>
         `;
 
@@ -177,30 +177,49 @@ export class MapComponent implements AfterViewInit {
             store.url ??
             `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`;
 
-          const marker = L.marker([store.lat, store.lng], { icon: this.storeIcon })
-            .addTo(this.map)
-            .bindPopup(`<b><a href="${storeUrl}" target="_blank">${store.name}</a></b>`);
+          const marker = L.marker([store.lat, store.lng], { icon: this.storeIcon }).addTo(this.map);
 
-          marker.on('click', () => this.showRouteTo(store.lat, store.lng));
+          (marker as any).store = {
+            name: store.name,
+            url: storeUrl,
+            probability: store.probability,
+            openingHours: store.openingHours,
+            phone: store.phone,
+          };
+
+          marker.on('click', () => this.showRouteTo(marker));
+
           this.storeMarkers.push(marker);
         });
       });
   }
 
-  private showRouteTo(storeLat: number, storeLng: number) {
+  private showRouteTo(marker: L.Marker) {
     const userPos = this.userMarker.getLatLng();
+    const storePos = marker.getLatLng();
+    const { name, url } = (marker as any).store;
 
     const loadingPopup = L.popup()
-      .setLatLng([storeLat, storeLng])
-      .setContent('Calculating route...')
+      .setLatLng(storePos)
+      .setContent(`<b><a href="${url}" target="_blank">${name}</a></b><br>Calculating route...`)
       .openOn(this.map);
 
-    this.mapService.getRoute(userPos.lat, userPos.lng, storeLat, storeLng).subscribe({
+    const probability =
+      (marker as any).store.probability === 'high'
+        ? 'High &#128994;'
+        : (marker as any).store.probability === 'medium'
+          ? 'Medium &#128992;'
+          : 'Low &#x1F534;';
+
+    this.mapService.getRoute(userPos.lat, userPos.lng, storePos.lat, storePos.lng).subscribe({
       next: (route) => {
         this.map.removeLayer(loadingPopup);
 
         if (!route?.geometry) {
-          L.popup().setLatLng([storeLat, storeLng]).setContent('Route not found').openOn(this.map);
+          L.popup()
+            .setLatLng(storePos)
+            .setContent(`<b><a href="${url}" target="_blank">${name}</a></b><br>Route not found`)
+            .openOn(this.map);
           return;
         }
 
@@ -214,16 +233,27 @@ export class MapComponent implements AfterViewInit {
         const km = (route.distance / 1000).toFixed(1);
 
         L.popup()
-          .setLatLng([storeLat, storeLng])
-          .setContent(`${km} km, approx. ${mins} min`)
+          .setLatLng(storePos)
+          .setContent(
+            `<b><a href="${url}" target="_blank">${name}</a></b><br>` +
+              `Probability: ${probability}<br>` +
+              `Contact: ${(marker as any).store.phone ?? 'Not available'}<br>` +
+              `Opening Hours: ${(marker as any).store.openingHours ?? 'Not available'}<br>` +
+              `${km} km, approx. ${mins} min`,
+          )
           .openOn(this.map);
       },
       error: (err) => {
-        console.error('Error calculating route:', err);
         this.map.removeLayer(loadingPopup);
         L.popup()
-          .setLatLng([storeLat, storeLng])
-          .setContent('Error calculating route.')
+          .setLatLng(storePos)
+          .setContent(
+            `<b><a href="${url}" target="_blank">${name}</a></b><br>` +
+              `Probability: ${probability}<br>` +
+              `Contact: ${(marker as any).store.phone ?? 'Not available'}<br>` +
+              `Opening Hours: ${(marker as any).store.openingHours ?? 'Not available'}<br>` +
+              `Error calculating route`,
+          )
           .openOn(this.map);
       },
     });

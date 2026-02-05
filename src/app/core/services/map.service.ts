@@ -29,6 +29,9 @@ export class MapService {
         lat: number;
         lng: number;
         url?: string;
+        phone?: string;
+        openingHours?: string;
+        probability: 'high' | 'medium' | 'low';
       }[]
     >(`http://localhost:3000/api/games/map/stores?${params}`);
   }

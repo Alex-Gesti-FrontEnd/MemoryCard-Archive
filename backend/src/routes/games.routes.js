@@ -120,12 +120,26 @@ router.get('/map/stores', async (req, res) => {
       typesArray,
     );
 
-    const result = stores.map((s) => ({
-      name: s.tags?.name ?? 'Unknown shop',
-      lat: s.lat ?? s.center?.lat,
-      lng: s.lon ?? s.center?.lon,
-      url: s.tags?.website ?? null,
-    }));
+    const result = stores.map((s) => {
+      const tags = s.tags || {};
+
+      const probability =
+        tags.shop === 'video_games' || tags.second_hand === 'yes'
+          ? 'high'
+          : tags.shop === 'electronics' || tags.shop === 'department_store'
+            ? 'medium'
+            : 'low';
+
+      return {
+        name: s.tags?.name ?? 'Unknown shop',
+        lat: s.lat ?? s.center?.lat,
+        lng: s.lon ?? s.center?.lon,
+        url: s.tags?.website ?? null,
+        phone: s.tags?.phone ?? tags['contact:phone'] ?? null,
+        openingHours: s.tags?.opening_hours ?? null,
+        probability,
+      };
+    });
 
     res.json(result);
   } catch (err) {
