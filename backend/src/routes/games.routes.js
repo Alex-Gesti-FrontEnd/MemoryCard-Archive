@@ -4,6 +4,41 @@ import { searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
 
+function formatStore(s) {
+  const tags = s.tags || {};
+  const name = (tags.name || '').toLowerCase();
+
+  const knownSeller = [
+    'game',
+    'games',
+    'gaming',
+    'mediamarkt',
+    'fnac',
+    'cex',
+    'carrefour',
+    'corte inglés',
+    'cash converters',
+    'xtralife',
+  ].some((k) => name.includes(k));
+
+  const probability =
+    tags.shop === 'video_games' || tags.second_hand === 'yes' || knownSeller
+      ? 'high'
+      : ['electronics', 'department_store', 'shopping_centre'].includes(tags.shop)
+        ? 'medium'
+        : 'low';
+
+  return {
+    name: tags.name ?? 'Unknown shop',
+    lat: s.lat ?? s.center?.lat,
+    lng: s.lon ?? s.center?.lon,
+    url: tags.website ?? null,
+    phone: tags.phone ?? tags['contact:phone'] ?? null,
+    openingHours: tags.opening_hours ?? null,
+    probability,
+  };
+}
+
 const router = express.Router();
 
 // Route to search for a game by name in IGDB
@@ -86,16 +121,13 @@ router.delete('/:id', async (req, res) => {
 // MAP geocoding route
 router.get('/map/location', async (req, res) => {
   const { lat, lng } = req.query;
-
   if (!lat || !lng) {
     return res.status(400).json({ message: 'Lat and lng are required' });
   }
 
   try {
-    const location = await reverseGeocodeOSM(lat, lng);
-    res.json(location);
+    res.json(await reverseGeocodeOSM(lat, lng));
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       message: 'OSM reverse geocoding error',
       error: error.message,
@@ -106,88 +138,42 @@ router.get('/map/location', async (req, res) => {
 // Localization of stores route
 router.get('/map/stores', async (req, res) => {
   const { lat, lng, radius, types } = req.query;
-
-  if (!lat || !lng || !radius || !types)
+  if (!lat || !lng || !radius || !types) {
     return res.status(400).json({ message: 'lat, lng, radius and types are required' });
-
-  const typesArray = types.split(',');
+  }
 
   try {
     const stores = await searchGameStores(
-      parseFloat(lat),
-      parseFloat(lng),
-      parseInt(radius),
-      typesArray,
+      Number(lat),
+      Number(lng),
+      Number(radius),
+      types.split(','),
     );
 
-    const result = stores.map((s) => {
-      const tags = s.tags || {};
-      const name = (tags.name || '').toLowerCase();
-
-      const knowSellers =
-        name.includes('game') ||
-        name.includes('games') ||
-        name.includes('gaming') ||
-        name.includes('mediamarkt') ||
-        name.includes('fnac') ||
-        name.includes('cex') ||
-        name.includes('carrefour') ||
-        name.includes('corte inglés') ||
-        name.includes('cash converters') ||
-        name.includes('xtralife');
-
-      const probability =
-        tags.shop === 'video_games' || tags.second_hand === 'yes' || knowSellers
-          ? 'high'
-          : tags.shop === 'electronics' ||
-              tags.shop === 'department_store' ||
-              tags.shop === 'shopping_centre'
-            ? 'medium'
-            : 'low';
-
-      return {
-        name: s.tags?.name ?? 'Unknown shop',
-        lat: s.lat ?? s.center?.lat,
-        lng: s.lon ?? s.center?.lon,
-        url: s.tags?.website ?? null,
-        phone: s.tags?.phone ?? tags['contact:phone'] ?? null,
-        openingHours: s.tags?.opening_hours ?? null,
-        probability,
-      };
-    });
-
-    res.json(result);
+    res.json(stores.map(formatStore));
   } catch (err) {
     res.status(500).json({ message: 'Overpass error', error: err.message });
   }
 });
 
+// Route calculation
 router.get('/map/route', async (req, res) => {
   const { fromLat, fromLng, toLat, toLng } = req.query;
-
   if (!fromLat || !fromLng || !toLat || !toLng) {
     return res.status(400).json({ message: 'fromLat, fromLng, toLat, toLng required' });
   }
 
   try {
     const url = `http://router.project-osrm.org/route/v1/foot/${fromLng},${fromLat};${toLng},${toLat}?overview=simplified&geometries=geojson`;
+    const data = await fetch(url).then((r) => r.json());
 
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.routes || data.routes.length === 0) {
+    if (!data.routes?.length) {
       return res.status(400).json({ message: 'No route found', raw: data });
     }
 
-    const route = data.routes[0];
-
-    res.json({
-      duration: route.duration,
-      distance: route.distance,
-      geometry: route.geometry,
-    });
+    const { duration, distance, geometry } = data.routes[0];
+    res.json({ duration, distance, geometry });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: 'Routing error', error: err.message });
   }
 });

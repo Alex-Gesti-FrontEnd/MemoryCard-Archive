@@ -2,18 +2,16 @@ export async function searchGameStores(lat, lng, radius, types) {
   const blocks = types
     .map(
       (type) => `
-        node["shop"="${type}"](around:${radius}, ${lat}, ${lng});
-        way["shop"="${type}"](around:${radius}, ${lat}, ${lng});
+        node["shop"="${type}"](around:${radius},${lat},${lng});
+        way["shop"="${type}"](around:${radius},${lat},${lng});
       `,
     )
-    .join('\n');
+    .join('');
 
   const query = `
     [out:json];
-    (
-      ${blocks}
-    );
-    out center tags;
+    (${blocks});
+    out center tags 50;
   `;
 
   const res = await fetch('https://overpass-api.de/api/interpreter', {
@@ -21,6 +19,5 @@ export async function searchGameStores(lat, lng, radius, types) {
     body: query,
   });
 
-  const data = await res.json();
-  return data.elements;
+  return (await res.json()).elements;
 }

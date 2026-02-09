@@ -1,13 +1,12 @@
 export async function reverseGeocodeOSM(lat, lng) {
-  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
-
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'video-games-management/1.0 (alexgesti@gmail.com)',
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+    {
+      headers: { 'User-Agent': 'video-games-management/1.0 (alexgesti@gmail.com)' },
     },
-  });
+  );
 
-  const data = await response.json();
+  const data = await res.json();
 
   return {
     address: data.display_name,
