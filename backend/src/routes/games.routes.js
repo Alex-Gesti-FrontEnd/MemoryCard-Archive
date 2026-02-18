@@ -3,6 +3,7 @@ import { getConnection } from '../db.js';
 import { searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
+import { getAveragePrice } from '../services/ebay.service.js';
 
 function formatStore(s) {
   const tags = s.tags || {};
@@ -57,6 +58,30 @@ router.get('/igdb/:name', async (req, res) => {
       message: 'IGDB error',
       error: error.message,
     });
+  }
+});
+
+// EBAY average price
+router.get('/price', async (req, res) => {
+  const { name, platform, region } = req.query;
+
+  if (!name || !platform || !region) {
+    return res.status(400).json({ message: 'name, platform and region required' });
+  }
+
+  try {
+    const searchQuery = `${name} ${platform} ${region}`;
+
+    const result = await getAveragePrice(searchQuery);
+
+    if (!result) {
+      return res.status(404).json({ message: 'No prices found' });
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'eBay error', error: err.message });
   }
 });
 
