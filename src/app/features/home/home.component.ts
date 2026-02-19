@@ -3,6 +3,7 @@ import { GamesService } from '../../core/services/games.service';
 import { GameModel } from '../../core/models/game.model';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -21,6 +22,8 @@ export class HomeComponent {
   platforms = signal<string[]>([]);
   platformsData = signal<{ platform: string; region: string; releaseDate: string }[]>([]);
   regions = signal<string[]>(['PAL', 'NTSC-U', 'NTSC-J', 'Worldwide']);
+
+  loadingPrice = signal(false);
 
   form = this.fb.group({
     name: ['', [Validators.required]],
@@ -85,7 +88,7 @@ export class HomeComponent {
           platform: r.platform?.name ?? '',
           region: r.region ?? '',
           releaseDate: r.date ? new Date(r.date * 1000).toISOString().slice(0, 10) : '',
-        })
+        }),
       );
 
       const versions: GameVersion[] = allVersions.filter((v) => v.platform);
@@ -116,5 +119,25 @@ export class HomeComponent {
 
   onRegionChange(selected: string) {
     this.form.patchValue({ region: selected });
+  }
+
+  async fetchEbayPrice() {
+    const { name, platform, region } = this.form.value;
+    if (!name || !platform || !region) return;
+
+    try {
+      this.loadingPrice.set(true);
+
+      const data = await firstValueFrom(this.gamesService.getEbayPrice(name, platform, region));
+
+      this.form.patchValue({
+        avgPrice: data.median,
+      });
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo obtener el precio');
+    } finally {
+      this.loadingPrice.set(false);
+    }
   }
 }

@@ -90,7 +90,13 @@ router.get('/', async (req, res) => {
   try {
     const connection = await getConnection();
     const [rows] = await connection.query('SELECT * FROM games');
-    res.json(rows);
+
+    const formatted = rows.map((game) => ({
+      ...game,
+      releaseDate: game.releaseDate ? game.releaseDate.toISOString().split('T')[0] : null,
+    }));
+
+    res.json(formatted);
     await connection.end();
   } catch (error) {
     console.error(error);

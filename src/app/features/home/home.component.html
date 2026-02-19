@@ -7,73 +7,83 @@
   </div>
 
   @if (showForm()) {
-  <form [formGroup]="form" (ngSubmit)="addGame()" class="card p-4 mb-4">
-    <div class="d-flex gap-3 flex-wrap">
-      <div class="flex-grow-1 flex-basis-30">
-        <label>Name</label>
-        <input formControlName="name" class="form-control" />
-      </div>
-      <div class="flex-grow-1 flex-basis-30">
-        <label>Platform</label>
-        @if (platforms().length > 0) {
-        <select
-          formControlName="platform"
-          class="form-select"
-          (change)="onPlatformChange($any($event.target).value)"
-        >
-          <option value="">Select platform</option>
-          @for (p of platforms(); track p) {
-          <option [value]="p">{{ p }}</option>
+    <form [formGroup]="form" (ngSubmit)="addGame()" class="card p-4 mb-4">
+      <div class="d-flex gap-3 flex-wrap">
+        <div class="flex-grow-1 flex-basis-30">
+          <label>Name</label>
+          <input formControlName="name" class="form-control" />
+        </div>
+        <div class="flex-grow-1 flex-basis-30">
+          <label>Platform</label>
+          @if (platforms().length > 0) {
+            <select
+              formControlName="platform"
+              class="form-select"
+              (change)="onPlatformChange($any($event.target).value)"
+            >
+              <option value="">Select platform</option>
+              @for (p of platforms(); track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          } @else {
+            <input formControlName="platform" class="form-control" />
           }
-        </select>
-        } @else {
-        <input formControlName="platform" class="form-control" />
-        }
+        </div>
+        <div class="flex-grow-1 flex-basis-30">
+          <label>Region</label>
+          <select
+            formControlName="region"
+            class="form-select"
+            (change)="onRegionChange($any($event.target).value)"
+          >
+            <option value="">Select region</option>
+            @for (r of regions(); track r) {
+              <option [value]="r">{{ r }}</option>
+            }
+          </select>
+        </div>
+        <div class="flex-grow-1 flex-basis-30">
+          <label>Genre</label>
+          <input formControlName="genre" class="form-control" />
+        </div>
       </div>
-      <div class="flex-grow-1 flex-basis-30">
-        <label>Region</label>
-        <select
-          formControlName="region"
-          class="form-select"
-          (change)="onRegionChange($any($event.target).value)"
-        >
-          <option value="">Select region</option>
-          @for (r of regions(); track r) {
-          <option [value]="r">{{ r }}</option>
-          }
-        </select>
-      </div>
-      <div class="flex-grow-1 flex-basis-30">
-        <label>Genre</label>
-        <input formControlName="genre" class="form-control" />
-      </div>
-    </div>
 
-    <div class="d-flex gap-3 flex-wrap mt-3">
-      <div class="flex-grow-1 flex-basis-30">
-        <label>Release date</label>
-        <input type="date" formControlName="releaseDate" class="form-control" />
+      <div class="d-flex gap-3 flex-wrap mt-3 mb-3">
+        <div class="flex-grow-1 flex-basis-30">
+          <label>Release date</label>
+          <input type="date" formControlName="releaseDate" class="form-control" />
+        </div>
+        <div class="flex-grow-1 flex-basis-30">
+          <label>Average price</label>
+          <input type="number" formControlName="avgPrice" class="form-control" />
+        </div>
+        <div class="flex-grow-1 flex-basis-30">
+          <label>Image (URL)</label>
+          <input formControlName="image" class="form-control" />
+        </div>
       </div>
-      <div class="flex-grow-1 flex-basis-30">
-        <label>Average price</label>
-        <input type="number" formControlName="avgPrice" class="form-control" />
-      </div>
-      <div class="flex-grow-1 flex-basis-30">
-        <label>Image (URL)</label>
-        <input formControlName="image" class="form-control" />
-      </div>
-    </div>
 
-    <button
-      type="button"
-      class="btn btn-outline-info mt-2"
-      (click)="autoFillFromIGDB()"
-      [disabled]="!form.value.name"
-    >
-      Autocompletar desde IGDB
-    </button>
-    <button class="btn btn-primary mt-3" [disabled]="form.invalid">Guardar</button>
-  </form>
+      <button
+        type="button"
+        class="btn btn-outline-info mt-2"
+        (click)="autoFillFromIGDB()"
+        [disabled]="!form.value.name"
+      >
+        Autocompletar desde IGDB
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-warning mt-2"
+        (click)="fetchEbayPrice()"
+        [disabled]="!form.value.name || !form.value.platform || !form.value.region"
+      >
+        Obtener precio desde eBay
+      </button>
+
+      <button class="btn btn-primary mt-2" [disabled]="form.invalid">Guardar</button>
+    </form>
   }
 
   <table class="table table-striped table-hover">
@@ -93,27 +103,27 @@
 
     <tbody>
       @for (game of games(); track game.id) {
-      <tr>
-        <td>{{ game.id }}</td>
-        <td>{{ game.name }}</td>
-        <td>{{ game.platform }}</td>
-        <td>{{ game.region }}</td>
-        <td>{{ game.genre }}</td>
-        <td>{{ game.releaseDate }}</td>
-        <td>{{ game.avgPrice }}€</td>
-        <td>
-          <img
-            [src]="game.image"
-            width="50"
-            height="50"
-            style="object-fit: cover; border-radius: 4px"
-          />
-        </td>
-        <td>
-          <button class="btn btn-sm btn-warning me-2" (click)="editGame(game)">Edit</button>
-          <button class="btn btn-sm btn-danger" (click)="deleteGame(game.id!)">Del</button>
-        </td>
-      </tr>
+        <tr>
+          <td>{{ game.id }}</td>
+          <td>{{ game.name }}</td>
+          <td>{{ game.platform }}</td>
+          <td>{{ game.region }}</td>
+          <td>{{ game.genre }}</td>
+          <td>{{ game.releaseDate | date: 'dd-MM-yyyy' }}</td>
+          <td>{{ game.avgPrice }}€</td>
+          <td>
+            <img
+              [src]="game.image"
+              width="50"
+              height="50"
+              style="object-fit: cover; border-radius: 4px"
+            />
+          </td>
+          <td>
+            <button class="btn btn-sm btn-warning me-2" (click)="editGame(game)">Edit</button>
+            <button class="btn btn-sm btn-danger" (click)="deleteGame(game.id!)">Del</button>
+          </td>
+        </tr>
       }
     </tbody>
   </table>
