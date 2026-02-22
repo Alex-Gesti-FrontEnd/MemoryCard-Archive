@@ -1,30 +1,9 @@
-.calendar-wrapper {
-  background-color: #f8f8f8;
-  padding: 20px;
-  border-radius: 12px;
-}
-
 .fc {
-  background-color: #f4f4f4;
-  color: #000;
   font-family: 'Inter', sans-serif;
 }
 
 .fc-toolbar-title {
-  font-size: 1.4rem;
   font-weight: 600;
-  color: #000;
-}
-
-.fc .fc-button {
-  background-color: #000;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-}
-
-.fc .fc-button:hover {
-  background-color: #333;
 }
 
 .fc .fc-col-header-cell-cushion,
@@ -39,10 +18,6 @@
   cursor: pointer;
 }
 
-.fc-day-today .fc-daygrid-day-number {
-  font-weight: bold;
-}
-
 .fc-theme-standard td,
 .fc-theme-standard th {
   border: 1.5px solid #000;
@@ -52,7 +27,9 @@
   border: 2px solid #000;
 }
 
-.fc-timegrid-body {
-  height: 70vh;
-  overflow-y: auto;
+.event-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1055;
 }

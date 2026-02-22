@@ -1,6 +1,20 @@
 <section class="container mt-4">
-  <h2>Calendar</h2>
-  <div class="calendar-wrapper">
+  <h2 class="mb-3">Calendar</h2>
+  <div class="calendar-wrapper bg-light p-4 rounded-3 shadow-sm">
     <full-calendar [options]="calendarOptions()" />
+    @if (selectedEvent()) {
+      <div class="event-overlay d-flex justify-content-center align-items-center">
+        <div class="event-modal bg-white p-4 rounded-4 shadow position-relative text-center">
+          <button
+            class="btn-close position-absolute top-0 end-0 m-3"
+            (click)="closePopup()"
+          ></button>
+          <h2 class="m-3 fw-semibold">{{ selectedEvent()!.title }}</h2>
+          <p class="mb-1"><strong>Plataforma:</strong> {{ selectedEvent()!.platform }}</p>
+          <p><strong>Años:</strong> {{ selectedEvent()!.age }}</p>
+          <img [src]="selectedEvent()!.image" alt="game image" class="img-fluid rounded-3 mt-1" />
+        </div>
+      </div>
+    }
   </div>
 </section>

@@ -1,8 +1,7 @@
-import { Component, computed, inject, ViewEncapsulation } from '@angular/core';
+import { Component, computed, signal, inject, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, FormatterInput } from '@fullcalendar/core';
-import { DateTime } from 'luxon';
+import { CalendarOptions, FormatterInput, EventInput } from '@fullcalendar/core';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -30,7 +29,47 @@ export class CalendarComponent {
     hour12: false,
   };
 
-  events = computed(() => []);
+  selectedEvent = signal<{
+    title: string;
+    image: string;
+    platform: string;
+    age: number;
+  } | null>(null);
+
+  events = computed<EventInput[]>(() => {
+    const currentYear = new Date().getFullYear();
+    const maxYear = currentYear + 100;
+
+    return this.games().flatMap((game) => {
+      if (!game.releaseDate) return [];
+
+      const [releaseYearStr, month, day] = game.releaseDate.split('-');
+      const releaseYear = new Date(game.releaseDate).getFullYear();
+
+      const events: EventInput[] = [];
+
+      for (let year = releaseYear; year <= maxYear; year++) {
+        const age = year - releaseYear;
+
+        events.push({
+          id: `${game.id}-${year}`,
+          title: `\u{1F382} ${game.name} (${age} años)`,
+          start: `${year}-${month}-${day}`,
+          allDay: true,
+          backgroundColor: '#1a79d8',
+          borderColor: '#1a79d8',
+          extendedProps: {
+            name: game.name,
+            image: game.image,
+            platform: game.platform,
+            age,
+          },
+        });
+      }
+
+      return events;
+    });
+  });
 
   calendarOptions = computed<CalendarOptions>(() => ({
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -38,7 +77,7 @@ export class CalendarComponent {
     initialView: 'dayGridMonth',
 
     headerToolbar: {
-      left: 'prev,next today',
+      left: 'prevYear,prev,next,nextYear today',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay',
     },
@@ -52,16 +91,6 @@ export class CalendarComponent {
 
     locale: esLocale,
     firstDay: 1,
-
-    titleFormat: (dateInfo: any) => {
-      const rawDate = dateInfo?.date || dateInfo?.start;
-      const date = new Date(rawDate);
-      if (isNaN(date.getTime())) return '';
-
-      const month = date.toLocaleString('es-ES', { month: 'long' });
-      const year = date.getFullYear();
-      return month.charAt(0).toUpperCase() + month.slice(1) + ' ' + year;
-    },
 
     selectable: true,
     editable: false,
@@ -82,6 +111,26 @@ export class CalendarComponent {
     expandRows: false,
     height: 'auto',
 
+    eventClick: (info) => {
+      const { name, image, platform, age } = info.event.extendedProps as {
+        name: string;
+        image: string;
+        platform: string;
+        age: number;
+      };
+
+      this.selectedEvent.set({
+        title: name,
+        image,
+        platform,
+        age,
+      });
+    },
+
     events: this.events(),
   }));
+
+  closePopup() {
+    this.selectedEvent.set(null);
+  }
 }
