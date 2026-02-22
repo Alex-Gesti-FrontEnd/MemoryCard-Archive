@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { GamesService } from '../../core/services/games.service';
 import { GameModel } from '../../core/models/game.model';
 import { CommonModule } from '@angular/common';
@@ -25,6 +25,48 @@ export class HomeComponent {
 
   loadingPrice = signal(false);
 
+  // --- Sorting ---
+  sortBy = signal<'id' | 'name' | 'releaseDate' | 'avgPrice' | null>(null);
+  sortDesc = signal(false);
+
+  sortedGames = computed(() => {
+    const gamesArray = [...this.games()];
+    const key = this.sortBy();
+    if (!key) return gamesArray;
+
+    const sorted = gamesArray.sort((a, b) => {
+      let valA: any = a[key] ?? '';
+      let valB: any = b[key] ?? '';
+
+      if (key === 'avgPrice') {
+        valA = Number(valA);
+        valB = Number(valB);
+      }
+
+      if (key === 'releaseDate') {
+        valA = new Date(valA).getTime();
+        valB = new Date(valB).getTime();
+      }
+
+      if (typeof valA === 'string') {
+        return valA.localeCompare(valB);
+      }
+      return valA - valB;
+    });
+
+    return this.sortDesc() ? sorted.reverse() : sorted;
+  });
+
+  toggleSort(key: 'id' | 'name' | 'releaseDate' | 'avgPrice') {
+    if (this.sortBy() === key) {
+      this.sortDesc.update((v) => !v);
+    } else {
+      this.sortBy.set(key);
+      this.sortDesc.set(false);
+    }
+  }
+
+  // --- CRUD & Form ---
   form = this.fb.group({
     name: ['', [Validators.required]],
     platform: ['', [Validators.required]],
@@ -135,7 +177,7 @@ export class HomeComponent {
       });
     } catch (err) {
       console.error(err);
-      alert('No se pudo obtener el precio');
+      alert('No price data found.');
     } finally {
       this.loadingPrice.set(false);
     }
