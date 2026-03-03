@@ -1,14 +1,14 @@
 import { Component, computed, signal, inject, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FullCalendarModule } from '@fullcalendar/angular';
+import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
 import { CalendarOptions, FormatterInput, EventInput } from '@fullcalendar/core';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import esLocale from '@fullcalendar/core/locales/es';
 
 import { GamesService } from '../../core/services/games.service';
+import { ReminderService } from '../../core/services/reminder.service';
 
 @Component({
   selector: 'app-calendar',
@@ -20,8 +20,32 @@ import { GamesService } from '../../core/services/games.service';
 })
 export class CalendarComponent {
   private gamesService = inject(GamesService);
+  private reminderService = inject(ReminderService);
 
   games = this.gamesService.games;
+  reminders = this.reminderService.reminders;
+
+  showReminderModal = signal(false);
+  newReminderDate = signal<string | null>(null);
+
+  newReminderTitle = signal('');
+  newReminderNotes = signal('');
+
+  ngOnInit() {
+    this.gamesService.fetchGames();
+    this.reminderService.load();
+  }
+
+  formattedReminderDate = computed(() => {
+    const date = this.newReminderDate();
+    if (!date) return '';
+
+    return new Date(date).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  });
 
   private readonly timeFormat: FormatterInput = {
     hour: '2-digit',
@@ -34,9 +58,32 @@ export class CalendarComponent {
     image: string;
     platform: string;
     age: number;
+    type?: 'release' | 'reminder';
+    reminderId?: number;
+    notes?: string;
   } | null>(null);
 
   events = computed<EventInput[]>(() => {
+    const gameEvents = this.generateReleaseEvents();
+
+    const reminderEvents = this.reminders().map((r) => ({
+      id: `reminder-${r.id}`,
+      title: `🛒 ${r.title}`,
+      start: r.date,
+      allDay: true,
+      backgroundColor: '#ff9800',
+      borderColor: '#ff9800',
+      extendedProps: {
+        type: 'reminder',
+        id: r.id,
+        notes: r.notes,
+      },
+    }));
+
+    return [...gameEvents, ...reminderEvents];
+  });
+
+  private generateReleaseEvents() {
     const currentYear = new Date().getFullYear();
     const maxYear = currentYear + 100;
 
@@ -59,6 +106,7 @@ export class CalendarComponent {
           backgroundColor: '#1a79d8',
           borderColor: '#1a79d8',
           extendedProps: {
+            type: 'release',
             name: game.name,
             image: game.image,
             platform: game.platform,
@@ -69,7 +117,7 @@ export class CalendarComponent {
 
       return events;
     });
-  });
+  }
 
   calendarOptions = computed<CalendarOptions>(() => ({
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -83,13 +131,18 @@ export class CalendarComponent {
     },
 
     buttonText: {
-      today: 'Hoy',
-      month: 'Mes',
-      week: 'Semana',
-      day: 'Día',
+      today: 'Today',
+      month: 'Month',
+      week: 'Week',
+      day: 'Day',
     },
 
-    locale: esLocale,
+    dateClick: (info) => {
+      this.newReminderDate.set(info.dateStr);
+      this.showReminderModal.set(true);
+    },
+
+    locale: 'en',
     firstDay: 1,
 
     selectable: true,
@@ -112,25 +165,62 @@ export class CalendarComponent {
     height: 'auto',
 
     eventClick: (info) => {
-      const { name, image, platform, age } = info.event.extendedProps as {
-        name: string;
-        image: string;
-        platform: string;
-        age: number;
-      };
+      const type = info.event.extendedProps['type'];
 
-      this.selectedEvent.set({
-        title: name,
-        image,
-        platform,
-        age,
-      });
+      if (type === 'release') {
+        const { name, image, platform, age } = info.event.extendedProps as {
+          name: string;
+          image: string;
+          platform: string;
+          age: number;
+        };
+
+        this.selectedEvent.set({
+          title: name,
+          image,
+          platform,
+          age,
+          type: 'release', // 👈 IMPORTANTE
+        });
+      } else if (type === 'reminder') {
+        const { id, notes } = info.event.extendedProps as any;
+
+        this.selectedEvent.set({
+          title: info.event.title,
+          image: '',
+          platform: '',
+          age: 0,
+          type: 'reminder',
+          reminderId: id,
+          notes,
+        });
+      }
     },
 
     events: this.events(),
   }));
 
+  createReminder() {
+    if (!this.newReminderTitle() || !this.newReminderDate()) return;
+
+    this.reminderService.add({
+      title: this.newReminderTitle(),
+      date: this.newReminderDate()!,
+      notes: this.newReminderNotes().trim() || undefined,
+      gameId: null,
+    });
+
+    this.newReminderTitle.set('');
+    this.newReminderNotes.set('');
+    this.showReminderModal.set(false);
+  }
+
   closePopup() {
+    this.selectedEvent.set(null);
+  }
+
+  deleteReminder(id: number) {
+    this.reminderService.delete(id);
     this.selectedEvent.set(null);
   }
 }
