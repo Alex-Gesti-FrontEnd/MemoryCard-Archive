@@ -114,3 +114,60 @@ export async function getAveragePrice(query) {
     currency: 'EUR',
   };
 }
+
+export async function getAllEbayPrices(query) {
+  const token = await getEbayToken();
+
+  let offset = 0;
+  const limit = 200;
+  const maxItems = 800;
+
+  let allItems = [];
+
+  while (offset < maxItems) {
+    const response = await fetch(
+      `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(
+        query,
+      )}&limit=${limit}&offset=${offset}&filter=buyingOptions:{FIXED_PRICE}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    const data = await response.json();
+
+    if (!data.itemSummaries?.length) break;
+
+    allItems.push(...data.itemSummaries);
+
+    if (data.itemSummaries.length < limit) break;
+
+    offset += limit;
+  }
+
+  if (!allItems.length) return [];
+
+  const currencies = [...new Set(allItems.map((item) => item.price?.currency).filter(Boolean))];
+
+  const exchangeRates = {};
+  for (const currency of currencies) {
+    const rate = await getExchangeRate(currency);
+    if (rate) exchangeRates[currency] = rate;
+  }
+
+  // Convert all prices to EUR
+  const eurPrices = allItems
+    .map((item) => {
+      const value = Number(item.price?.value);
+      const currency = item.price?.currency;
+      if (value == null || !currency) return null;
+      const rate = exchangeRates[currency];
+      if (!rate) return null;
+      return value * rate;
+    })
+    .filter((p) => p != null);
+
+  return eurPrices;
+}

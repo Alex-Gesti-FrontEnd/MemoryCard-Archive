@@ -3,7 +3,7 @@ import { getConnection } from '../db.js';
 import { searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
-import { getAveragePrice } from '../services/ebay.service.js';
+import { getAveragePrice, getAllEbayPrices } from '../services/ebay.service.js';
 
 function formatStore(s) {
   const tags = s.tags || {};
@@ -82,6 +82,21 @@ router.get('/price', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'eBay error', error: err.message });
+  }
+});
+
+// EBAY all prices for histogram
+router.get('/ebay-prices', async (req, res) => {
+  const { name, platform, region } = req.query;
+  if (!name || !platform || !region) return res.status(400).json({ message: 'Faltan parámetros' });
+
+  try {
+    const query = `${name} ${platform} ${region}`;
+    const prices = await getAllEbayPrices(query);
+    res.json(prices);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error eBay', error: err.message });
   }
 });
 

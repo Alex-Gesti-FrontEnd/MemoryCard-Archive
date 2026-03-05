@@ -1,1 +1,15 @@
-<p>graphics works!</p>
+<div class="graphics-container">
+  <h2>Select a game</h2>
+
+  <select [(ngModel)]="selectedGame" (ngModelChange)="onSelectGame()">
+    <option [ngValue]="null">-- Select --</option>
+    <option *ngFor="let game of games()" [ngValue]="game">
+      {{ game.name }} - {{ game.platform }} ({{ game.region }})
+    </option>
+  </select>
+
+  <div *ngIf="priceData().length > 0" class="charts">
+    <canvas id="histogramChart"></canvas>
+    <canvas id="pieChart"></canvas>
+  </div>
+</div>
