@@ -1,8 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Chart } from 'chart.js';
+import { firstValueFrom } from 'rxjs';
+
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 interface Game {
   id: number;
@@ -28,15 +32,26 @@ export class GraphicsComponent implements OnInit {
   histogramChart: Chart | null = null;
   pieChart: Chart | null = null;
 
+  constructor() {
+    effect(() => {
+      const prices = this.priceData();
+      if (prices.length > 0) {
+        this.createCharts();
+      }
+    });
+  }
+
   ngOnInit() {
     this.loadGames();
   }
 
-  loadGames() {
-    this.http.get<Game[]>('http://localhost:3000/api/games').subscribe({
-      next: (games) => this.games.set(games),
-      error: (err) => console.error('Error loading games:', err),
-    });
+  async loadGames() {
+    try {
+      const games = await firstValueFrom(this.http.get<Game[]>('http://localhost:3000/api/games'));
+      this.games.set(games);
+    } catch (err) {
+      console.error('Error loading games:', err);
+    }
   }
 
   async onSelectGame() {
@@ -44,63 +59,114 @@ export class GraphicsComponent implements OnInit {
     if (!game) return;
 
     try {
-      const response: number[] | undefined = await this.http
-        .get<
-          number[]
-        >(`http://localhost:3000/api/games/ebay-prices?name=${encodeURIComponent(game.name)}&platform=${encodeURIComponent(game.platform)}&region=${encodeURIComponent(game.region)}`)
-        .toPromise();
+      const prices = await firstValueFrom(
+        this.http.get<number[]>(
+          `http://localhost:3000/api/games/ebay-prices?name=${encodeURIComponent(
+            game.name,
+          )}&platform=${encodeURIComponent(
+            game.platform,
+          )}&region=${encodeURIComponent(game.region)}`,
+        ),
+      );
 
-      this.priceData.set(response ?? []);
-      this.createCharts();
+      this.priceData.set(prices ?? []);
     } catch (err) {
       console.error('Error fetching eBay prices:', err);
     }
   }
 
-  private createCharts() {
-    if (!this.priceData().length) return;
+  private getNiceStep(range: number) {
+    const roughStep = range / 10;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
 
-    const prices = [...this.priceData()].sort((a, b) => a - b);
+    const niceSteps = [1, 2, 5, 10];
+
+    for (const step of niceSteps) {
+      if (roughStep <= step * magnitude) {
+        return step * magnitude;
+      }
+    }
+
+    return 10 * magnitude;
+  }
+
+  private createCharts() {
+    const prices = [...this.priceData()].filter((p) => p > 0 && p < 1000).sort((a, b) => a - b);
+    if (!prices.length) return;
+
     const min = prices[0];
     const max = prices[prices.length - 1];
 
-    const binsCount = Math.min(10, Math.ceil(Math.sqrt(prices.length)));
-    const binSize = (max - min) / binsCount;
+    const range = max - min;
+    const binSize = this.getNiceStep(range);
+
+    const minRounded = Math.floor(min / binSize) * binSize;
+    const maxRounded = Math.ceil(max / binSize) * binSize;
+
+    const binsCount = Math.ceil((maxRounded - minRounded) / binSize);
 
     const labels = Array.from({ length: binsCount }, (_, i) => {
-      const start = Math.round(min + i * binSize);
-      const end = Math.round(min + (i + 1) * binSize);
+      const start = minRounded + i * binSize;
+      const end = start + binSize;
       return `${start}-${end} €`;
     });
 
     const counts = Array(binsCount).fill(0);
+
     prices.forEach((p) => {
-      let idx = Math.floor((p - min) / binSize);
+      let idx = Math.floor((p - minRounded) / binSize);
       if (idx >= binsCount) idx = binsCount - 1;
       counts[idx]++;
     });
 
-    // Histogram chart
+    const colors = labels.map((_, i) => `hsl(${(i * 360) / binsCount},70%,50%)`);
+
+    const histogramCanvas = document.getElementById('histogramChart') as HTMLCanvasElement | null;
+
+    const pieCanvas = document.getElementById('pieChart') as HTMLCanvasElement | null;
+
+    if (!histogramCanvas || !pieCanvas) return;
+
     if (this.histogramChart) this.histogramChart.destroy();
-    const ctx1 = document.getElementById('histogramChart') as HTMLCanvasElement;
-    this.histogramChart = new Chart(ctx1, {
+    if (this.pieChart) this.pieChart.destroy();
+
+    this.histogramChart = new Chart(histogramCanvas, {
       type: 'bar',
       data: {
         labels,
         datasets: [
           {
-            label: 'Sales count per price range',
             data: counts,
-            backgroundColor: '#1a79d8',
+            backgroundColor: colors,
           },
         ],
       },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Price range (€)',
+            },
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Number of sales',
+            },
+          },
+        },
+      },
     });
 
-    // Pie chart
-    if (this.pieChart) this.pieChart.destroy();
-    const ctx2 = document.getElementById('pieChart') as HTMLCanvasElement;
-    this.pieChart = new Chart(ctx2, {
+    this.pieChart = new Chart(pieCanvas, {
       type: 'pie',
       data: {
         labels,
@@ -108,9 +174,17 @@ export class GraphicsComponent implements OnInit {
           {
             label: 'Price distribution',
             data: counts,
-            backgroundColor: labels.map((_, i) => `hsl(${(i * 360) / binsCount}, 70%, 50%)`),
+            backgroundColor: colors,
           },
         ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+        },
       },
     });
   }

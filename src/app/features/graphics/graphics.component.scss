@@ -1,13 +1,4 @@
-.container {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.charts-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  canvas {
-    max-width: 100%;
-  }
+canvas {
+  max-width: 500px;
+  max-height: 400px;
 }
