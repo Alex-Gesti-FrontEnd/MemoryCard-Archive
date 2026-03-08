@@ -1,35 +1,30 @@
-<div class="container mt-4">
+<section class="container mt-4">
   <h2 class="mb-2 text-start">Graphics</h2>
-  <h5 class="mb-4 text-start text-muted">Select a game</h5>
-  <div class="mb-4">
+  <h5 class="mb-3 text-start text-muted info-text">Select a game to see its price distribution</h5>
+  <div class="mb-4 d-flex justify-content-start">
     <select
-      class="form-select w-auto"
+      class="form-select w-100 w-md-auto game-select"
       [ngModel]="selectedGame()"
       (ngModelChange)="selectedGame.set($event); onSelectGame()"
     >
       <option [ngValue]="null">-- Select --</option>
-
-      @for (game of games(); track game.id) {
-        <option [ngValue]="game">{{ game.name }} - {{ game.platform }} ({{ game.region }})</option>
-      }
+      <option *ngFor="let game of games(); trackBy: trackById" [ngValue]="game" class="game-option">
+        {{ game.name }} - {{ game.platform }} ({{ game.region }})
+      </option>
     </select>
   </div>
-
-  @if (priceData().length > 0) {
-    <div class="row g-4">
-      <div class="col-md-6 text-center">
-        <h5 class="mb-3">Price Histogram</h5>
-        <div class="d-flex justify-content-center">
-          <canvas id="histogramChart"></canvas>
-        </div>
-      </div>
-
-      <div class="col-md-6 text-center">
-        <h5 class="mb-3">Price Distribution</h5>
-        <div class="d-flex justify-content-center">
-          <canvas id="pieChart"></canvas>
-        </div>
+  <div *ngIf="priceData().length > 0" class="row g-4 justify-content-center">
+    <div class="col-12 col-md-6 text-center chart-container">
+      <h5 class="mb-3 chart-title">Price Histogram</h5>
+      <div class="chart-wrapper d-flex justify-content-center">
+        <canvas id="histogramChart" class="w-100"></canvas>
       </div>
     </div>
-  }
-</div>
+    <div class="col-12 col-md-6 text-center chart-container">
+      <h5 class="mb-3 chart-title">Price Distribution</h5>
+      <div class="chart-wrapper d-flex justify-content-center">
+        <canvas id="pieChart" class="w-100"></canvas>
+      </div>
+    </div>
+  </div>
+</section>

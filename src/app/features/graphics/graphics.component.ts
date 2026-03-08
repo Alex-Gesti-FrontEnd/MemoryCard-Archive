@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -35,14 +34,16 @@ export class GraphicsComponent implements OnInit {
   constructor() {
     effect(() => {
       const prices = this.priceData();
-      if (prices.length > 0) {
-        this.createCharts();
-      }
+      if (prices.length) this.createCharts();
     });
   }
 
   ngOnInit() {
     this.loadGames();
+  }
+
+  trackById(index: number, game: Game) {
+    return game.id;
   }
 
   async loadGames() {
@@ -61,14 +62,9 @@ export class GraphicsComponent implements OnInit {
     try {
       const prices = await firstValueFrom(
         this.http.get<number[]>(
-          `http://localhost:3000/api/games/ebay-prices?name=${encodeURIComponent(
-            game.name,
-          )}&platform=${encodeURIComponent(
-            game.platform,
-          )}&region=${encodeURIComponent(game.region)}`,
+          `http://localhost:3000/api/games/ebay-prices?name=${encodeURIComponent(game.name)}&platform=${encodeURIComponent(game.platform)}&region=${encodeURIComponent(game.region)}`,
         ),
       );
-
       this.priceData.set(prices ?? []);
     } catch (err) {
       console.error('Error fetching eBay prices:', err);
@@ -77,16 +73,10 @@ export class GraphicsComponent implements OnInit {
 
   private getNiceStep(range: number) {
     const roughStep = range / 10;
-    const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-
-    const niceSteps = [1, 2, 5, 10];
-
-    for (const step of niceSteps) {
-      if (roughStep <= step * magnitude) {
-        return step * magnitude;
-      }
+    const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+    for (const step of [1, 2, 5, 10]) {
+      if (roughStep <= step * magnitude) return step * magnitude;
     }
-
     return 10 * magnitude;
   }
 
@@ -96,13 +86,10 @@ export class GraphicsComponent implements OnInit {
 
     const min = prices[0];
     const max = prices[prices.length - 1];
-
     const range = max - min;
     const binSize = this.getNiceStep(range);
-
     const minRounded = Math.floor(min / binSize) * binSize;
     const maxRounded = Math.ceil(max / binSize) * binSize;
-
     const binsCount = Math.ceil((maxRounded - minRounded) / binSize);
 
     const labels = Array.from({ length: binsCount }, (_, i) => {
@@ -112,7 +99,6 @@ export class GraphicsComponent implements OnInit {
     });
 
     const counts = Array(binsCount).fill(0);
-
     prices.forEach((p) => {
       let idx = Math.floor((p - minRounded) / binSize);
       if (idx >= binsCount) idx = binsCount - 1;
@@ -120,11 +106,8 @@ export class GraphicsComponent implements OnInit {
     });
 
     const colors = labels.map((_, i) => `hsl(${(i * 360) / binsCount},70%,50%)`);
-
     const histogramCanvas = document.getElementById('histogramChart') as HTMLCanvasElement | null;
-
     const pieCanvas = document.getElementById('pieChart') as HTMLCanvasElement | null;
-
     if (!histogramCanvas || !pieCanvas) return;
 
     if (this.histogramChart) this.histogramChart.destroy();
@@ -132,36 +115,13 @@ export class GraphicsComponent implements OnInit {
 
     this.histogramChart = new Chart(histogramCanvas, {
       type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            data: counts,
-            backgroundColor: colors,
-          },
-        ],
-      },
+      data: { labels, datasets: [{ data: counts, backgroundColor: colors }] },
       options: {
         responsive: true,
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
+        plugins: { legend: { display: false } },
         scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Price range (€)',
-            },
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Number of sales',
-            },
-          },
+          x: { title: { display: true, text: 'Price range (€)' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Number of sales' } },
         },
       },
     });
@@ -170,22 +130,9 @@ export class GraphicsComponent implements OnInit {
       type: 'pie',
       data: {
         labels,
-        datasets: [
-          {
-            label: 'Price distribution',
-            data: counts,
-            backgroundColor: colors,
-          },
-        ],
+        datasets: [{ label: 'Price distribution', data: counts, backgroundColor: colors }],
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-        },
-      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
     });
   }
 }

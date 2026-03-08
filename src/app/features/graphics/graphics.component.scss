@@ -1,4 +1,35 @@
 canvas {
-  max-width: 500px;
+  max-width: 100%;
   max-height: 400px;
+}
+
+.chart-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+.container {
+  overflow-x: hidden;
+}
+
+@media (max-width: 767.98px) {
+  .info-text,
+  .game-select {
+    font-size: 0.85rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .game-option {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chart-title {
+    font-size: 0.95rem;
+  }
 }
