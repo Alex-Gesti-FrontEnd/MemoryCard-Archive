@@ -28,6 +28,13 @@ export class MapComponent implements AfterViewInit {
 
   selectedRadius = 2000;
 
+  private shopTypeMap: Record<string, string[]> = {
+    all: ['video_games', 'second_hand', 'electronics', 'department_store', 'shopping_centre'],
+    videogames: ['video_games', 'second_hand'],
+    electronics: ['electronics'],
+    general: ['department_store', 'shopping_centre'],
+  };
+
   locationIcon = L.icon({
     iconUrl: 'assets/marker-icon.png',
     iconSize: [17.5, 30],
@@ -96,10 +103,12 @@ export class MapComponent implements AfterViewInit {
         btn.style.width = '34px';
         btn.style.height = '34px';
         btn.style.cursor = 'pointer';
+
         btn.onclick = () => {
           const pos = this.userMarker.getLatLng();
           this.map.setView(pos, 14);
         };
+
         return btn;
       },
     });
@@ -118,28 +127,7 @@ export class MapComponent implements AfterViewInit {
 
         select.onchange = () => {
           const value = select.value;
-
-          if (value === 'all') {
-            this.selectedTypes = [
-              'video_games',
-              'second_hand',
-              'electronics',
-              'department_store',
-              'shopping_centre',
-            ];
-          }
-
-          if (value === 'videogames') {
-            this.selectedTypes = ['video_games', 'second_hand'];
-          }
-
-          if (value === 'electronics') {
-            this.selectedTypes = ['electronics'];
-          }
-
-          if (value === 'general') {
-            this.selectedTypes = ['department_store', 'shopping_centre'];
-          }
+          this.selectedTypes = this.shopTypeMap[value] ?? this.shopTypeMap['all'];
 
           const pos = this.userMarker.getLatLng();
           this.updateStores(pos.lat, pos.lng);

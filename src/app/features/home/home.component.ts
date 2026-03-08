@@ -38,6 +38,8 @@ export class HomeComponent implements OnInit {
   sortBy = signal<'id' | 'name' | 'releaseDate' | 'avgPrice' | null>(null);
   sortDesc = signal(false);
 
+  gameCount = computed(() => this.games().length);
+
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
     platform: ['', Validators.required],
