@@ -1,37 +1,61 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { GamesService } from '../../core/services/games.service';
-import { GameModel } from '../../core/models/game.model';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
+import { GamesService } from '../../core/services/games.service';
+import { GameModel } from '../../core/models/game.model';
+
+type GameVersion = {
+  platform: string;
+  region: string;
+  releaseDate: string;
+};
+
 @Component({
   selector: 'app-home',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
-export class HomeComponent {
-  fb = inject(FormBuilder);
-  gamesService = inject(GamesService);
-  showForm = signal(false);
+export class HomeComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private gamesService = inject(GamesService);
 
-  games = this.gamesService.games;
+  showForm = signal(false);
   editingId = signal<number | null>(null);
 
+  games = this.gamesService.games;
+
   platforms = signal<string[]>([]);
-  platformsData = signal<{ platform: string; region: string; releaseDate: string }[]>([]);
-  regions = signal<string[]>(['PAL', 'NTSC-U', 'NTSC-J', 'Worldwide']);
+  platformsData = signal<GameVersion[]>([]);
+
+  regions = signal(['PAL', 'NTSC-U', 'NTSC-J', 'Worldwide']);
 
   loadingPrice = signal(false);
 
-  // --- Sorting ---
   sortBy = signal<'id' | 'name' | 'releaseDate' | 'avgPrice' | null>(null);
   sortDesc = signal(false);
+
+  form = this.fb.nonNullable.group({
+    name: ['', Validators.required],
+    platform: ['', Validators.required],
+    region: ['', Validators.required],
+    genre: ['', Validators.required],
+    releaseDate: ['', Validators.required],
+    avgPrice: [0, Validators.required],
+    image: [''],
+  });
+
+  ngOnInit(): void {
+    this.gamesService.fetchGames();
+  }
 
   sortedGames = computed(() => {
     const gamesArray = [...this.games()];
     const key = this.sortBy();
+
     if (!key) return gamesArray;
 
     const sorted = gamesArray.sort((a, b) => {
@@ -51,6 +75,7 @@ export class HomeComponent {
       if (typeof valA === 'string') {
         return valA.localeCompare(valB);
       }
+
       return valA - valB;
     });
 
@@ -66,25 +91,10 @@ export class HomeComponent {
     }
   }
 
-  // --- CRUD & Form ---
-  form = this.fb.group({
-    name: ['', [Validators.required]],
-    platform: ['', [Validators.required]],
-    region: ['', [Validators.required]],
-    genre: ['', [Validators.required]],
-    releaseDate: ['', [Validators.required]],
-    avgPrice: [0, [Validators.required]],
-    image: [''],
-  });
-
-  ngOnInit() {
-    this.gamesService.fetchGames();
-  }
-
   addGame() {
     if (this.form.invalid) return;
 
-    const gameData = this.form.value as GameModel;
+    const gameData = this.form.getRawValue() as GameModel;
 
     if (this.editingId()) {
       this.gamesService.updateGame(this.editingId()!, gameData);
@@ -97,7 +107,7 @@ export class HomeComponent {
   }
 
   editGame(game: GameModel) {
-    this.editingId.set(game.id!);
+    this.editingId.set(game.id);
     this.form.patchValue(game);
     this.showForm.set(true);
   }
@@ -108,7 +118,10 @@ export class HomeComponent {
 
   toggleForm() {
     this.showForm.update((v) => !v);
-    if (!this.showForm()) this.resetForm();
+
+    if (!this.showForm()) {
+      this.resetForm();
+    }
   }
 
   private resetForm() {
@@ -123,20 +136,19 @@ export class HomeComponent {
     if (!name) return;
 
     this.gamesService.searchIGDB(name).subscribe((data) => {
-      type GameVersion = { platform: string; region: string; releaseDate: string };
-
-      const allVersions: GameVersion[] = (data.release_dates ?? []).map(
-        (r: any): GameVersion => ({
-          platform: r.platform?.name ?? '',
-          region: r.region ?? '',
-          releaseDate: r.date ? new Date(r.date * 1000).toISOString().slice(0, 10) : '',
-        }),
-      );
-
-      const versions: GameVersion[] = allVersions.filter((v) => v.platform);
+      const versions: GameVersion[] = (data.release_dates ?? [])
+        .map(
+          (r: any): GameVersion => ({
+            platform: r.platform?.name ?? '',
+            region: r.region ?? '',
+            releaseDate: r.date ? new Date(r.date * 1000).toISOString().slice(0, 10) : '',
+          }),
+        )
+        .filter((v: GameVersion) => v.platform);
 
       this.platformsData.set(versions);
-      this.platforms.set([...new Set(versions.map((v) => v.platform))]);
+
+      this.platforms.set(Array.from(new Set(versions.map((v) => v.platform))));
 
       this.form.patchValue({
         name: data.name,
@@ -151,12 +163,13 @@ export class HomeComponent {
 
   onPlatformChange(selected: string) {
     const version = this.platformsData().find((v) => v.platform === selected);
-    if (version) {
-      this.form.patchValue({
-        platform: version.platform,
-        releaseDate: version.releaseDate,
-      });
-    }
+
+    if (!version) return;
+
+    this.form.patchValue({
+      platform: version.platform,
+      releaseDate: version.releaseDate,
+    });
   }
 
   onRegionChange(selected: string) {
@@ -165,6 +178,7 @@ export class HomeComponent {
 
   async fetchEbayPrice() {
     const { name, platform, region } = this.form.value;
+
     if (!name || !platform || !region) return;
 
     try {

@@ -1,0 +1,46 @@
+.sortable {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sort-arrow {
+  font-size: 0.75rem;
+  margin-left: 4px;
+}
+
+.game-title {
+  font-weight: 600;
+}
+
+.game-meta {
+  font-size: 0.75rem;
+  color: #6c757d;
+  line-height: 1.1;
+}
+
+.game-image {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.price-cell {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.actions-cell button {
+  padding: 3px 6px;
+}
+
+@media (max-width: 768px) {
+  table {
+    font-size: 0.8rem;
+  }
+
+  .game-image {
+    width: 32px;
+    height: 32px;
+  }
+}

@@ -1,20 +1,21 @@
-<section class="container mt-4">
-  <div class="d-flex justify-content-between mb-3">
-    <h2 class="mb-3">Video Game Management</h2>
-    <button class="btn btn-success" (click)="toggleForm()">
+<section class="container py-3">
+  <div
+    class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3"
+  >
+    <h2 class="mb-2">Video Game Management</h2>
+    <button class="btn btn-success mb-2" (click)="toggleForm()">
       {{ showForm() ? 'Close' : 'Add game' }}
     </button>
   </div>
-
   @if (showForm()) {
-    <form [formGroup]="form" (ngSubmit)="addGame()" class="card p-4 mb-4">
-      <div class="d-flex gap-3 flex-wrap">
-        <div class="flex-grow-1 flex-basis-30">
-          <label>Name</label>
+    <form [formGroup]="form" (ngSubmit)="addGame()" class="card shadow-sm p-3 mb-4">
+      <div class="row g-3">
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Name</label>
           <input formControlName="name" class="form-control" />
         </div>
-        <div class="flex-grow-1 flex-basis-30">
-          <label>Platform</label>
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Platform</label>
           @if (platforms().length > 0) {
             <select
               formControlName="platform"
@@ -30,8 +31,8 @@
             <input formControlName="platform" class="form-control" />
           }
         </div>
-        <div class="flex-grow-1 flex-basis-30">
-          <label>Region</label>
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Region</label>
           <select
             formControlName="region"
             class="form-select"
@@ -43,114 +44,130 @@
             }
           </select>
         </div>
-        <div class="flex-grow-1 flex-basis-30">
-          <label>Genre</label>
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Genre</label>
           <input formControlName="genre" class="form-control" />
         </div>
-      </div>
-
-      <div class="d-flex gap-3 flex-wrap mt-3 mb-3">
-        <div class="flex-grow-1 flex-basis-30">
-          <label>Release date</label>
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Release date</label>
           <input type="date" formControlName="releaseDate" class="form-control" />
         </div>
-        <div class="flex-grow-1 flex-basis-30">
-          <label>Average price</label>
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Average price</label>
           <input type="number" formControlName="avgPrice" class="form-control" />
         </div>
-        <div class="flex-grow-1 flex-basis-30">
-          <label>Image (URL)</label>
+        <div class="col-12">
+          <label class="form-label">Image (URL)</label>
           <input formControlName="image" class="form-control" />
         </div>
       </div>
-
-      <button
-        type="button"
-        class="btn btn-outline-info mt-2"
-        (click)="autoFillFromIGDB()"
-        [disabled]="!form.value.name"
-      >
-        Autocompletar desde IGDB
-      </button>
-
-      <button
-        type="button"
-        class="btn btn-outline-warning mt-2"
-        (click)="fetchEbayPrice()"
-        [disabled]="!form.value.name || !form.value.platform || !form.value.region"
-      >
-        Obtener precio desde eBay
-      </button>
-
-      <button class="btn btn-primary mt-2" [disabled]="form.invalid">Guardar</button>
+      <div class="d-flex flex-column flex-md-row gap-2 mt-3">
+        <button
+          type="button"
+          class="btn btn-outline-info"
+          (click)="autoFillFromIGDB()"
+          [disabled]="!form.value.name"
+        >
+          Autofill IGDB
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-warning"
+          (click)="fetchEbayPrice()"
+          [disabled]="!form.value.name || !form.value.platform || !form.value.region"
+        >
+          Get price from eBay
+        </button>
+        <button class="btn btn-primary ms-md-auto" [disabled]="form.invalid">Save</button>
+      </div>
     </form>
   }
-
-  <table class="table table-striped table-hover">
-    <thead class="table-dark">
-      <tr>
-        <th
-          (click)="toggleSort('id')"
-          style="cursor: pointer; white-space: nowrap; min-width: 60px"
-        >
-          ID
-          @if (sortBy() === 'id') {
-            <span [innerHTML]="sortDesc() ? '&#8595;' : '&#8593;'"></span>
-          }
-        </th>
-        <th (click)="toggleSort('name')" style="cursor: pointer">
-          Name
-          @if (sortBy() === 'name') {
-            <span [innerHTML]="sortDesc() ? '&#8595;' : '&#8593;'"></span>
-          }
-        </th>
-        <th>Platform</th>
-        <th>Region</th>
-        <th>Genre</th>
-        <th (click)="toggleSort('releaseDate')" style="cursor: pointer">
-          Release
-          @if (sortBy() === 'releaseDate') {
-            <span [innerHTML]="sortDesc() ? '&#8595;' : '&#8593;'"></span>
-          }
-        </th>
-        <th
-          (click)="toggleSort('avgPrice')"
-          style="cursor: pointer; white-space: nowrap; min-width: 80px"
-        >
-          Price
-          @if (sortBy() === 'avgPrice') {
-            <span [innerHTML]="sortDesc() ? '&#8595;' : '&#8593;'"></span>
-          }
-        </th>
-        <th>Image</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      @for (game of sortedGames(); track game.id) {
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle table-sm crud-table">
+      <thead class="table-dark">
         <tr>
-          <td>{{ game.id }}</td>
-          <td>{{ game.name }}</td>
-          <td>{{ game.platform }}</td>
-          <td>{{ game.region }}</td>
-          <td>{{ game.genre }}</td>
-          <td>{{ game.releaseDate | date: 'dd-MM-yyyy' }}</td>
-          <td>{{ game.avgPrice }}€</td>
-          <td>
-            <img
-              [src]="game.image"
-              width="50"
-              height="50"
-              style="object-fit: cover; border-radius: 4px"
-            />
-          </td>
-          <td>
-            <button class="btn btn-sm btn-warning me-2" (click)="editGame(game)">Edit</button>
-            <button class="btn btn-sm btn-danger" (click)="deleteGame(game.id!)">Del</button>
-          </td>
+          <th (click)="toggleSort('id')" class="sortable text-center">
+            ID
+            @if (sortBy() === 'id') {
+              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
+            }
+          </th>
+
+          <th (click)="toggleSort('name')" class="sortable">
+            Name
+            @if (sortBy() === 'name') {
+              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
+            }
+          </th>
+
+          <th class="d-none d-md-table-cell">Platform</th>
+          <th class="d-none d-md-table-cell text-center">Region</th>
+          <th class="d-none d-md-table-cell">Genre</th>
+
+          <th
+            class="d-none d-md-table-cell sortable text-center"
+            (click)="toggleSort('releaseDate')"
+          >
+            Release
+            @if (sortBy() === 'releaseDate') {
+              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
+            }
+          </th>
+
+          <th class="sortable text-center" (click)="toggleSort('avgPrice')">
+            Price
+            @if (sortBy() === 'avgPrice') {
+              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
+            }
+          </th>
+          <th class="text-center">Img</th>
+          <th class="text-center"></th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (game of sortedGames(); track game.id) {
+          <tr>
+            <td class="text-center">{{ game.id }}</td>
+
+            <td class="game-cell">
+              <div class="game-title">
+                {{ game.name }}
+              </div>
+
+              <div class="game-meta d-md-none">{{ game.platform }} • {{ game.region }}</div>
+
+              <div class="game-meta d-md-none">
+                {{ game.genre }}
+              </div>
+
+              <div class="game-meta d-md-none">
+                {{ game.releaseDate | date: 'dd-MM-yyyy' }}
+              </div>
+            </td>
+
+            <td class="d-none d-md-table-cell">{{ game.platform }}</td>
+
+            <td class="d-none d-md-table-cell text-center">{{ game.region }}</td>
+
+            <td class="d-none d-md-table-cell">{{ game.genre }}</td>
+
+            <td class="d-none d-md-table-cell">
+              {{ game.releaseDate | date: 'dd/MM/yyyy' }}
+            </td>
+
+            <td class="price-cell text-center">{{ game.avgPrice }}€</td>
+
+            <td class="text-center">
+              <img [src]="game.image" class="game-image" alt="{{ game.name }}" />
+            </td>
+
+            <td class="text-center actions-cell">
+              <button class="btn btn-warning btn-sm me-1" (click)="editGame(game)">Edit</button>
+              <button class="btn btn-danger btn-sm" (click)="deleteGame(game.id!)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </section>

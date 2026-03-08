@@ -1,20 +1,19 @@
 import { Injectable, signal } from '@angular/core';
-import { GameModel } from '../models/game.model';
 import { HttpClient } from '@angular/common/http';
+import { GameModel } from '../models/game.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GamesService {
-  games = signal<GameModel[]>([]);
   private apiUrl = 'http://localhost:3000/api/games';
+
+  games = signal<GameModel[]>([]);
 
   constructor(private http: HttpClient) {}
 
   fetchGames() {
-    this.http.get<GameModel[]>(this.apiUrl).subscribe((data) => {
-      this.games.set(data);
-    });
+    this.http.get<GameModel[]>(this.apiUrl).subscribe((data) => this.games.set(data));
   }
 
   addGame(game: GameModel) {
@@ -43,11 +42,7 @@ export class GamesService {
     return this.http.get<{ median: number; count: number; currency: string }>(
       `${this.apiUrl}/price`,
       {
-        params: {
-          name,
-          platform,
-          region,
-        },
+        params: { name, platform, region },
       },
     );
   }
