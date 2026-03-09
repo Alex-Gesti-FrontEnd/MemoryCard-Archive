@@ -1,6 +1,6 @@
 import { Component, computed, signal, inject, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
+import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, FormatterInput, EventInput } from '@fullcalendar/core';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -26,15 +26,31 @@ export class CalendarComponent {
   reminders = this.reminderService.reminders;
 
   showReminderModal = signal(false);
-  newReminderDate = signal<string | null>(null);
 
+  newReminderDate = signal<string | null>(null);
   newReminderTitle = signal('');
   newReminderNotes = signal('');
+
+  selectedEvent = signal<{
+    title: string;
+    image: string;
+    platform: string;
+    age: number;
+    type?: 'release' | 'reminder';
+    reminderId?: number;
+    notes?: string;
+  } | null>(null);
 
   ngOnInit() {
     this.gamesService.fetchGames();
     this.reminderService.load();
   }
+
+  private readonly timeFormat: FormatterInput = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  };
 
   formattedReminderDate = computed(() => {
     const date = this.newReminderDate();
@@ -47,28 +63,12 @@ export class CalendarComponent {
     });
   });
 
-  private readonly timeFormat: FormatterInput = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  };
-
-  selectedEvent = signal<{
-    title: string;
-    image: string;
-    platform: string;
-    age: number;
-    type?: 'release' | 'reminder';
-    reminderId?: number;
-    notes?: string;
-  } | null>(null);
-
   events = computed<EventInput[]>(() => {
     const gameEvents = this.generateReleaseEvents();
 
     const reminderEvents = this.reminders().map((r) => ({
       id: `reminder-${r.id}`,
-      title: `🛒 ${r.title}`,
+      title: `\u{1F6D2} ${r.title}`,
       start: r.date,
       allDay: true,
       backgroundColor: '#ff9800',
@@ -82,42 +82,6 @@ export class CalendarComponent {
 
     return [...gameEvents, ...reminderEvents];
   });
-
-  private generateReleaseEvents() {
-    const currentYear = new Date().getFullYear();
-    const maxYear = currentYear + 100;
-
-    return this.games().flatMap((game) => {
-      if (!game.releaseDate) return [];
-
-      const [releaseYearStr, month, day] = game.releaseDate.split('-');
-      const releaseYear = new Date(game.releaseDate).getFullYear();
-
-      const events: EventInput[] = [];
-
-      for (let year = releaseYear; year <= maxYear; year++) {
-        const age = year - releaseYear;
-
-        events.push({
-          id: `${game.id}-${year}`,
-          title: `\u{1F382} ${game.name} (${age} años)`,
-          start: `${year}-${month}-${day}`,
-          allDay: true,
-          backgroundColor: '#1a79d8',
-          borderColor: '#1a79d8',
-          extendedProps: {
-            type: 'release',
-            name: game.name,
-            image: game.image,
-            platform: game.platform,
-            age,
-          },
-        });
-      }
-
-      return events;
-    });
-  }
 
   calendarOptions = computed<CalendarOptions>(() => ({
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -155,14 +119,17 @@ export class CalendarComponent {
     slotLabelFormat: this.timeFormat,
     eventTimeFormat: this.timeFormat,
 
-    slotLabelContent: (arg) => arg.text + 'h',
+    slotLabelContent: (arg) => ({ html: `<span class="fc-time-label-text">${arg.text}h</span>` }),
+    dayHeaderContent: (arg) => ({ html: `<span class="fc-day-header-text">${arg.text}</span>` }),
+    titleFormat: { year: 'numeric', month: 'long', day: 'numeric' },
 
     dayMaxEvents: true,
     fixedWeekCount: false,
     showNonCurrentDates: false,
-
     expandRows: false,
+
     height: 'auto',
+    contentHeight: 'auto',
 
     eventClick: (info) => {
       const type = info.event.extendedProps['type'];
@@ -180,7 +147,7 @@ export class CalendarComponent {
           image,
           platform,
           age,
-          type: 'release', // 👈 IMPORTANTE
+          type: 'release',
         });
       } else if (type === 'reminder') {
         const { id, notes } = info.event.extendedProps as any;
@@ -199,6 +166,42 @@ export class CalendarComponent {
 
     events: this.events(),
   }));
+
+  private generateReleaseEvents() {
+    const currentYear = new Date().getFullYear();
+    const maxYear = currentYear + 100;
+
+    return this.games().flatMap((game) => {
+      if (!game.releaseDate) return [];
+
+      const [releaseYearStr, month, day] = game.releaseDate.split('-');
+      const releaseYear = new Date(game.releaseDate).getFullYear();
+
+      const events: EventInput[] = [];
+
+      for (let year = releaseYear; year <= maxYear; year++) {
+        const age = year - releaseYear;
+
+        events.push({
+          id: `${game.id}-${year}`,
+          title: `\u{1F382} ${game.name} (${age} años)`,
+          start: `${year}-${month}-${day}`,
+          allDay: true,
+          backgroundColor: '#1a79d8',
+          borderColor: '#1a79d8',
+          extendedProps: {
+            type: 'release',
+            name: game.name,
+            image: game.image,
+            platform: game.platform,
+            age,
+          },
+        });
+      }
+
+      return events;
+    });
+  }
 
   createReminder() {
     if (!this.newReminderTitle() || !this.newReminderDate()) return;

@@ -9,14 +9,14 @@ export class ReminderService {
   private _reminders = signal<Reminder[]>([]);
   reminders = this._reminders.asReadonly();
 
+  private apiUrl = 'http://localhost:3000/api/reminders';
+
   load() {
-    this.http
-      .get<Reminder[]>('http://localhost:3000/api/reminders')
-      .subscribe((r) => this._reminders.set(r));
+    this.http.get<Reminder[]>(this.apiUrl).subscribe((r) => this._reminders.set(r));
   }
 
   add(reminder: Omit<Reminder, 'id'>) {
-    return this.http.post<Reminder>('http://localhost:3000/api/reminders', reminder).subscribe({
+    return this.http.post<Reminder>(this.apiUrl, reminder).subscribe({
       next: (newReminder) => {
         console.log('Reminder added:', newReminder);
         this._reminders.update((r) => [...r, newReminder]);
@@ -26,7 +26,7 @@ export class ReminderService {
   }
 
   delete(id: number) {
-    return this.http.delete(`http://localhost:3000/api/reminders/${id}`).subscribe({
+    return this.http.delete(`${this.apiUrl}/${id}`).subscribe({
       next: () => {
         this._reminders.update((r) => r.filter((rem) => rem.id !== id));
       },
