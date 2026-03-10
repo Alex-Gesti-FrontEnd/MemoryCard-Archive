@@ -3,9 +3,28 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Chart, registerables } from 'chart.js';
+import {
+  Chart,
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  ArcElement,
+  PieController,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
-Chart.register(...registerables);
+Chart.register(
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  ArcElement,
+  PieController,
+  Tooltip,
+  Legend,
+);
 
 interface Game {
   id: number;
@@ -27,6 +46,7 @@ export class GraphicsComponent implements OnInit {
   games = signal<Game[]>([]);
   selectedGame = signal<Game | null>(null);
   priceData = signal<number[]>([]);
+  priceCache = new Map<string, number[]>();
 
   histogramChart: Chart | null = null;
   pieChart: Chart | null = null;
@@ -59,13 +79,22 @@ export class GraphicsComponent implements OnInit {
     const game = this.selectedGame();
     if (!game) return;
 
+    const key = `${game.name}-${game.platform}-${game.region}`;
+
+    if (this.priceCache.has(key)) {
+      this.priceData.set(this.priceCache.get(key)!);
+      return;
+    }
     try {
       const prices = await firstValueFrom(
         this.http.get<number[]>(
           `http://localhost:3000/api/games/ebay-prices?name=${encodeURIComponent(game.name)}&platform=${encodeURIComponent(game.platform)}&region=${encodeURIComponent(game.region)}`,
         ),
       );
-      this.priceData.set(prices ?? []);
+
+      const data = prices ?? [];
+      this.priceCache.set(key, data);
+      this.priceData.set(data);
     } catch (err) {
       console.error('Error fetching eBay prices:', err);
     }
@@ -110,29 +139,41 @@ export class GraphicsComponent implements OnInit {
     const pieCanvas = document.getElementById('pieChart') as HTMLCanvasElement | null;
     if (!histogramCanvas || !pieCanvas) return;
 
-    if (this.histogramChart) this.histogramChart.destroy();
-    if (this.pieChart) this.pieChart.destroy();
-
-    this.histogramChart = new Chart(histogramCanvas, {
-      type: 'bar',
-      data: { labels, datasets: [{ data: counts, backgroundColor: colors }] },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { title: { display: true, text: 'Price range (€)' } },
-          y: { beginAtZero: true, title: { display: true, text: 'Number of sales' } },
+    if (this.histogramChart) {
+      this.histogramChart.data.labels = labels;
+      this.histogramChart.data.datasets[0].data = counts;
+      this.histogramChart.update();
+    } else {
+      this.histogramChart = new Chart(histogramCanvas, {
+        type: 'bar',
+        data: { labels, datasets: [{ data: counts, backgroundColor: colors }] },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { title: { display: true, text: 'Price range (€)' } },
+            y: { beginAtZero: true, title: { display: true, text: 'Number of sales' } },
+          },
         },
-      },
-    });
+      });
+    }
 
-    this.pieChart = new Chart(pieCanvas, {
-      type: 'pie',
-      data: {
-        labels,
-        datasets: [{ label: 'Price distribution', data: counts, backgroundColor: colors }],
-      },
-      options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
-    });
+    if (this.pieChart) {
+      this.pieChart.data.labels = labels;
+      this.pieChart.data.datasets[0].data = counts;
+      this.pieChart.update();
+    } else {
+      this.pieChart = new Chart(pieCanvas, {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{ label: 'Price distribution', data: counts, backgroundColor: colors }],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+        },
+      });
+    }
   }
 }
