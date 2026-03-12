@@ -1,7 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import path from 'path';
 import gamesRouter from './routes/games.routes.js';
 import remindersRouter from './routes/reminders.routes.js';
 
@@ -14,12 +13,7 @@ app.use(express.json());
 app.use('/api/games', gamesRouter);
 app.use('/api/reminders', remindersRouter);
 
-const angularDistPath = path.join(process.cwd(), 'backend/dist/angular8/browser');
-app.use(express.static(angularDistPath));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(angularDistPath, 'index.html'));
-});
+app.get('/', (req, res) => res.json({ ok: true, message: 'API backend funcionando' }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API + Frontend arrancados en http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`API arrancada en http://localhost:${PORT}`));
