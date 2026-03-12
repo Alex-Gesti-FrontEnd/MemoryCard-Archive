@@ -483,7 +483,7 @@ A continuación se mostrará algunas capturas de la aplicación en funcionamient
 
 Puedes probar la aplicación directamente en tu navegador, sin necesidad de instalar nada:
 
-[**Abrir Demo**](https://animemoviesdatabase.web.app)
+[**Abrir Demo**](https://videogamesdb-36fc5.web.app)
 
 ---
 
