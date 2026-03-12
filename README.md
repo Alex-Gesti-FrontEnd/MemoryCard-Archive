@@ -361,8 +361,6 @@ npm install
 
 ---
 
-A PARTIR DE AQUI FALTA ACABAR DE COMPLETAR
-
 ## Ejecución
 
 ### 🖥️ Modo desarrollo
