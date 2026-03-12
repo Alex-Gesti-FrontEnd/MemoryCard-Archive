@@ -1,156 +1,300 @@
-# 7.-AnimeMovie-Angular
+# 8.-Inprocode-Angular
 
 ## 📄 Descripción - Enunciado del ejercicio
 
-Este proyecto es una aplicación desarrollada en **Angular** que permite **explorar y visualizar películas de anime** mediante datos obtenidos de una API externa (TMDb).
+Este proyecto es una aplicación web desarrollada con **Angular y Node.js (Express)** que permite **gestionar una colección de videojuegos**, consultar información externa y analizar precios de mercado a tiempo real.
 
-El objetivo principal del ejercicio es practicar fundamentos intermedios y avanzados de Angular: **servicios, routing, signals, formularios, autenticación con Firebase, y testing.**
+La aplicación permite al usuario:
 
-La aplicación permite al usuario registrarse o iniciar sesión, navegar por la lista de películas, ver detalles de cada película y gestionar su sesión de forma reactiva con Signals.
+- Registrar videojuegos en una base de datos local.
+- Obtener información de juegos desde [**IGDB**](https://www.igdb.com).
+- Analizar precios reales de mercado mediante [**eBay**](https://www.ebay.es/?mkcid=1&mkrid=1185-53479-19255-0&siteid=186&campid=5337315324&customid=gxesebayebaysd&toolid=10001&mkevt=1).
+- Localizar tiendas cercanas que venden videojuegos.
+- Planificar recordatorios relacionados con su colección.
+
+El objetivo principal del proyecto es practicar una **arquitectura Full Stack moderna**, integrando un **frontend en Angular** con un **backend en Node.js**, utilizando múltiples **APIs externas**, base de datos **MySQL**, y visualización avanzada de datos.
 
 ---
 
 ## ✨ Funcionalidades
 
-- **Autenticación de usuarios 🔑**
+### Gestión de videojuegos
 
-  - Registro y login mediante **Firebase Authentication.**
-  - Visualización del nombre de usuario una vez logueado.
-  - Cierre de sesión seguro.
-
-- **Exploración de películas 🎬**
-
-  - Visualización de **tarjetas de películas** con título, poster y puntuación.
-  - **Scroll infinito** para cargar más películas al desplazarse.
-  - Navegación a detalles de cada película.
-
-- **Detalle de película 📝**
-
-  - Sinopsis completa.
-  - Actores de voz y su papel.
-  - Puntuación.
+- Crear videojuegos en la base de datos local.
+- Editar información de un juego.
+- Eliminar juegos.
+- Visualizar toda la colección registrada.
+- Guardar información como:
+  - Nombre.
+  - Plataforma.
+  - Región.
   - Género.
+  - Fecha de lanzamiento.
+  - Precio medio de mercado.
+  - Imagen.
 
-- **Gestión de estado con Signals ⚡**
+### Búsqueda de información externa (IGDB)
 
-  - Estado de usuario y películas gestionado con **Angular Signals.**
-  - Actualización automática de vistas al cambiar los datos.
+La aplicación puede buscar información de videojuegos mediante la API de **IGDB**.
 
-- **Routing dinámico 🌐**
+Datos obtenidos automáticamente:
 
-  - Navegación a la pantalla de detalle de cada película mediante parámetros dinámicos (`/movie/:id`).
-  - Protecciones de rutas según autenticación (overlay que bloquea contenido si no estás logueado).
+- Nombre del juego.
+- Género.
+- Plataforma.
+- Fecha de lanzamiento.
+- Imagen del juego.
 
-- **Interfaz intuitiva y responsiva 🖥️📱**
+Esto permite **completar automáticamente información del juego** al añadirlo a la colección.
 
-  - Diseño basado en **Bootstrap 5**, adaptable a móviles y escritorio.
-  - Mensajes de overlay cuando el usuario no está logueado.
+### Análisis de precios de mercado (eBay)
 
-- **Testing unitario con Jasmine + Karma 🧪**
+El backend consulta **eBay Marketplace API** para analizar precios reales.
 
-  - Pruebas para componentes y servicios principales:
-    - `AuthService` → login, registro, logout, Signals, usuario activo.
-    - `LoginComponent` → envío de formularios y navegación.
-    - `HomeComponent` → visualización de películas según estado de usuario.
+Funciones:
+
+- Cálculo del **precio medio (mediana)** de un juego.
+- Conversión automática de divisas a **EUR**.
+- Análisis de **hasta 800 anuncios de eBay**.
+
+La aplicación puede mostrar:
+
+- Precio medio estimado.
+- Número de anuncios analizados.
+- Histograma de precios.
+
+Esto permite saber **cuánto vale realmente un juego en el mercado actual**.
+
+### Localización de tiendas cercanas
+
+El sistema permite buscar **tiendas físicas cercanas** que podrían vender videojuegos.
+
+Utiliza:
+
+- **OpenStreetMap**.
+- **Overpass API**.
+
+Información mostrada:
+
+- Nombre de la tienda.
+- Ubicación en mapa.
+- Web oficial.
+- Teléfono.
+- Horario de apertura.
+- Probabilidad de que vendan videojuegos.
+
+Clasificación de probabilidad:
+
+- **High** → tiendas especializadas o segunda mano.
+- **Medium** → grandes superficies o electrónica.
+- **Low** → tiendas generales.
+
+### Cálculo de rutas
+
+La aplicación puede calcular **la ruta a pie hacia una tienda** usando:
+
+**OSRM (Open Source Routing Machine)**
+
+Se calcula:
+
+- Distancia.
+- Tiempo estimado.
+- Ruta mostrada en el mapa.
+
+### Sistema de recordatorios
+
+La aplicación incluye un sistema de **recordatorios con calendario**.
+
+Permite:
+
+- Crear recordatorios.
+- Asociarlos a videojuegos.
+- Añadir notas.
+- Visualizarlos en calendario.
+
+Ejemplos:
+
+- Comprar un juego.
+- Evento gaming.
+- Lanzamiento de un juego.
+- Recordatorio de colección.
+
+### Visualización de datos
+
+El sistema puede mostrar:
+
+- Distribución de precios de eBay.
+- Gráficos de mercado.
+- Comparación de precios.
+
+Esto ayuda a **analizar el valor real de una colección**.
 
 ---
 
 ## 🏗️ Arquitectura del proyecto
 
-El proyecto sigue una arquitectura modular por componentes, propia de Angular 20:
+El proyecto está dividido en **Frontend (Angular)** y **Backend (Node.js)**:
+
+### FRONTEND
 
 ```bash
 src/
 ├── app/
-│ ├── features/
-│ │ ├── home/
-│ │ │ └── home.component.ts / html / scss / spec.ts
-│ │ ├── login/
-│ │ │ └── login.component.ts / html / scss / spec.ts
-│ │ └── movie-detail/
-│ │   └── movie-detail.component.ts / html / scss / spec.ts
 │ ├── core/
-│ │ ├── services/
-│ │ │ ├── auth.service.ts / spec.ts
-│ │ │ └── movies.service.ts / spec.ts
-│ │ └── models/
-│ │   └── movie.model.ts
-│ ├── environments/
-│ │   └── environment.ts
+│ │ ├── models/
+│ │ │ ├── game.model.ts
+│ │ │ └── reminder.model.ts
+│ │ └── services/
+│ │   ├── games.service.ts / spec.ts
+│ │   ├── map.service.ts / spec.ts
+│ │   └── reminder.service.ts / spec.ts
+│ ├── features/
+│ │ └── calendar/
+│ │   └── calendar.component.ts / spec.ts / .html / .scss
+│ │ └── graphics/
+│ │   └── graphics.component.ts / spec.ts / .html / .scss
+│ │ └── home/
+│ │   └── home.component.ts / spec.ts / .html / .scss
+│ │ └── map/
+│ │   └── map.component.ts / spec.ts / .html / .scss
+│ ├── shared/
+│ │ └── components/
+│ │  └── components/
+│ │   └── navbar.component.ts / .scss / .spec.ts / .html
 │ ├── app.routes.ts
-│ ├── app.routes.server.ts
 │ ├── app.ts / html / scss
-│ ├── app.config.ts
-│ ├── app.config.server.ts
+│ └── app.config.ts
+├── assets/
+│ ├── marker-icon-2x.png
+│ ├── marker-icon.png
+│ ├── marker-shadow.png
+│ ├── marker-store-icon-2x.png
+│ └── marker-store-icon.png
 ├── main.ts
-├── main.server.ts
-├── server.ts
+├── index.html
 └── styles.scss
 ```
 
-- **AuthService** gestiona la sesión del usuario con Firebase.
-- **MoviesService** obtiene datos de la API TMDb y los expone mediante Signals.
-- Los componentes usan Signals para reactividad automática.
-- El enrutado (`app.routes.ts`) maneja rutas protegidas y dinámicas.
+### BACKEND
+
+```bash
+backend/
+├── src/
+│ ├── routes/
+│ │ ├── games.routes.js
+│ │ └── reminders.routes.js
+│ ├── services/
+│ │ ├── igdb.service.js
+│ │ ├── ebay.service.js
+│ │ ├── geocoding.service.js
+│ │ └── overpass.service.js
+│ ├── db.js
+│ └── app.js
+└── .env
+```
+
+---
+
+## 🗄️ Base de datos
+
+El backend utiliza **MySQL**.
+
+Tablas principales:
+
+### games
+
+| Campo       | Tipo    |
+| ----------- | ------- |
+| id          | INT     |
+| name        | VARCHAR |
+| platform    | VARCHAR |
+| region      | VARCHAR |
+| genre       | VARCHAR |
+| releaseDate | DATE    |
+| avgPrice    | FLOAT   |
+| image       | TEXT    |
+
+---
+
+### reminders
+
+| Campo  | Tipo    |
+| ------ | ------- |
+| id     | INT     |
+| title  | VARCHAR |
+| date   | DATE    |
+| notes  | TEXT    |
+| gameId | INT     |
 
 ---
 
 ## 🎨 Decisiones de diseño
 
 - **Minimalismo visual**
-
   - Uso de Bootstrap y SCSS modular para un diseño limpio y legible.
 
 - **Responsive Design**
-
   - Adaptado a móviles y escritorio, con tarjetas flexibles para películas.
 
 - **UX clara**
-
-  - Mensajes de overlay si el usuario no está logueado.
-  - Scroll infinito para facilitar exploración de películas.
+  - Mensajes de funcionamiento básico del programa.
+  - Uso de colores minimalistas para la visualización rápida del usuario.
 
 - **Signals en Angular 20**
-
   - Evita suscripciones manuales y optimiza la actualización de vistas.
 
 ---
 
 ## ⚠️ Limitaciones conocidas
 
-- La aplicación **no almacena favoritos ni historial de películas.**
+- Dependencia de APIs externas, las cuales **pueden llegar a ser de pago**.
 
-- No hay almacenamiento persistente de sesión más allá de Firebase.
+- No hay **autentitación de usuarios**.
 
-- La lista de películas depende de la API externa y no hay cacheo.
+- No hay almacenamiento en la nube.
 
-- El diseño es básico, sin animaciones avanzadas.
-
-- Tests unitarios cubren solo la lógica principal.
+- Precisión de tiendas depende **únicamente** de OpenStreetMap.
 
 ---
 
 ## 🚀 Roadmap / Mejoras futuras
 
-- **Añadir favoritos y listas personalizadas** por usuario.
+- Sistema de **usuarios y autenticación**.
 
-- **Persistencia de datos** local o en Firebase.
+- **Listas de colección y organización profunda**.
 
-- **Mejorar la interfaz** con animaciones y modo oscuro/claro.
+- Busqueda de juego en la colección mediante **un buscador**.
 
-- **Implementar filtros por género, puntuación o año.**
+- **Mejorar la interfaz** con animaciones y mejora visual.
 
 ---
 
-## 💻 Tecnologías Utilizadas
+## 💻 Tecnologías utilizadas
 
-- [Angular 20](https://angular.dev)
-- **TypeScript**
-- **HTML5 / SCSS / Bootstrap 5**
-- **Firebase Authentication**
-- **Angular Forms & Signals**
-- **Angular Router**
-- **Jasmine + Karma** (para testing)
+### Frontend
+
+- [Angular](https://angular.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- HTML
+- SCSS
+- [Bootstrap](https://getbootstrap.com)
+- [FullCalendar](https://fullcalendar.io)
+
+### Backend
+
+- [Node.js](https://nodejs.org/es)
+- Express
+- [MySQL](https://www.mysql.com)
+- dotenv
+- CORS
+
+### APIs externas
+
+- [IGDB API](https://www.igdb.com/api)
+- [eBay Marketplace API](https://developer.ebay.com/develop)
+- OpenStreetMap
+- Overpass API
+- [OSRM Routing API](https://project-osrm.org/docs/v5.24.0/api/#)
 
 ---
 
@@ -159,13 +303,36 @@ src/
 Para ejecutar este proyecto se necesita:
 
 - Node.js (v18 o superior)
+- MySQL instalado en tu ordenador.
 - Angular CLI instalado globalmente
   ```bash
   npm install -g @angular/cli
   ```
 - Un editor de código (recomendado: _Visual Studio Code_)
 - Un navegador moderno (_Chrome, Edge, Firefox, OperaGX, etc_)
-- **Google Chrome** instalado (requerido por _Karma_ para los tests)
+
+---
+
+## ⚙️ Configuración
+
+Crea un archivo `.env` en la carpeta **backend**.
+
+Estructura:
+
+```bash
+PORT=3000
+
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=tu_password
+DB_NAME=video_games
+
+IGDB_CLIENT_ID=tu_client_id
+IGDB_CLIENT_SECRET=tu_client_secret
+
+EBAY_CLIENT_ID=tu_client_id
+EBAY_CLIENT_SECRET=tu_client_secret
+```
 
 ---
 
@@ -174,32 +341,45 @@ Para ejecutar este proyecto se necesita:
 1.  Clona el repositorio o descarga los archivos ZIP:
 
 ```bash
-git clone https://github.com/Alex-Gesti-FrontEnd/7.-AnimeMovie-Angular.git
+git clone https://github.com/Alex-Gesti-FrontEnd/8.-Inprocode-Angular
 ```
 
 2.  Abre la carpeta del proyecto en tu editor de código.
 
-3.  Instala las dependencias:
+3.  Instala las dependencias de **frontend**:
 
 ```bash
 npm install
 ```
 
+4.  Instala las dependencias de **backend**:
+
+```bash
+cd ./backend
+npm install
+```
+
 ---
+
+A PARTIR DE AQUI FALTA ACABAR DE COMPLETAR
 
 ## Ejecución
 
 ### 🖥️ Modo desarrollo
 
-1. Inicia el servidor:
+1. Inicia el servidor de **Backend**:
+
+```bash
+npm run dev
+```
+
+2. Inicia el servidor de **Frontend**:
 
 ```bash
 ng serve
 ```
 
-2. Abre el navegador y entra en http://localhost:4200.
-
-3. Puedes registrarte, iniciar sesión, explorar películas y navegar a detalle.
+3. Abre el navegador y entra en http://localhost:4200.
 
 ---
 
@@ -208,10 +388,10 @@ ng serve
 1. Ejecuta los tests con:
 
 ```bash
-ng test
+npm test
 ```
 
-2. Se abrirá una ventana en Chrome mostrando los resultados de las pruebas unitarias (éxitos, fallos y logs detallados). Si no tienes Chrome instalado, configura otro navegador en el archivo _karma.conf.js_.
+2. La consola del editor de código mostrando los resultados de las pruebas unitarias (éxitos, fallos y logs detallados).
 
 ---
 
@@ -221,53 +401,82 @@ A continuación se mostrará algunas capturas de la aplicación en funcionamient
 
 - **Pantalla _Home_**
 
-  - **_Login_ requerido**
+  <p align="center">
+  <img src="src/assets/README/demo-home-neutral.png" alt="Demo 1" width="450"/>
+    </p>
+    
+  - **_Add game_ abierto**
 
       <p align="center">
-      <img src="src/assets/screen_homeNoLogin.png" alt="Demo 1" width="450"/>
+      <img src="src/assets/README/demo-home-search.png" alt="Demo 1" width="450"/>
+
     </p>
 
-  - **_Login_ realizado**
-
-      <p align="center">
-      <img src="src/assets/screen_home_1.png" alt="Demo 1" width="450"/>
-    </p>
-      <p align="center">
-      <img src="src/assets/screen_home_2.png" alt="Demo 1" width="450"/>
-    </p>
-
-- **Pantalla _Login_**
+- **Pantalla _Game Store Map_**
 
 <p align="center">
-      <img src="src/assets/screen_login.png" alt="Demo 1" width="450"/>
+      <img src="src/assets/README/demo-map-neutral.png" alt="Demo 1" width="450"/>
 </p>
 
-- **Pantalla _Pelicula_**
-
-  - **Información de la pelicula**
-
-    <p align="center">
-      <img src="src/assets/screen_movie_1.png" alt="Demo 1" width="450"/>
-  </p>
-
-  - **Información del _cast_**
+- **Pantalla _Calendar_**
+  - **Mes**
 
     <p align="center">
-      <img src="src/assets/screen_movie_2.png" alt="Demo 1" width="450"/>
+      <img src="src/assets/README/demo-calendar-neutral.png" alt="Demo 1" width="450"/>
   </p>
+
+  - **Semana**
+
+    <p align="center">
+      <img src="src/assets/README/demo-calendar-week.png" alt="Demo 1" width="450"/>
+  </p>
+
+  - **Día**
+
+    <p align="center">
+      <img src="src/assets/README/demo-calendar-day.png" alt="Demo 1" width="450"/>
+  </p>
+
+  - **Evento de aniversario**
+
+    <p align="center">
+      <img src="src/assets/README/demo-calendar-ann.png" alt="Demo 1" width="450"/>
+  </p>
+
+  - **Añadir evento**
+
+    <p align="center">
+      <img src="src/assets/README/demo-calendar-eventC.png" alt="Demo 1" width="450"/>
+  </p>
+  <p align="center">
+      <img src="src/assets/README/demo-calendar-reminder.png" alt="Demo 1" width="450"/>
+  </p>
+  <p align="center">
+      <img src="src/assets/README/demo-calendar-event.png" alt="Demo 1" width="450"/>
+  </p>
+
+- **Pantalla _Graphics_**
+
+<p align="center">
+      <img src="src/assets/README/demo-graphics-neutral.png" alt="Demo 1" width="450"/>
+</p>
 
 - **Formato móvil**
 
 <p align="center">
-      <img src="src/assets/screen_home_mobile.png" alt="Demo 1" width="250"/>
+      <img src="src/assets/README/demo-home-mobile.png" alt="Demo 1" width="250"/>
 </p>
 
 <p align="center">
-      <img src="src/assets/screen_login_mobile.png" alt="Demo 1" width="250"/>
+      <img src="src/assets/README/demo-map-mobile.png" alt="Demo 1" width="250"/>
 </p>
 
 <p align="center">
-      <img src="src/assets/screen_movie_mobile.png" alt="Demo 1" width="250"/>
+      <img src="src/assets/README/demo-calendar-mobile.png" alt="Demo 1" width="250"/>
+</p>
+
+<p align="center">
+      <img src="src/assets/README/demo-graphics-mobile.png" alt="Demo 1" width="250"/>
 </p>
 
 ---
@@ -282,4 +491,4 @@ Puedes probar la aplicación directamente en tu navegador, sin necesidad de inst
 
 ## © Derechos de autor
 
-© 2025 [Alex Gesti](https://github.com/alexgesti) — Todos los derechos reservados.
+© 2026 [Alex Gesti](https://github.com/alexgesti) — Todos los derechos reservados.
