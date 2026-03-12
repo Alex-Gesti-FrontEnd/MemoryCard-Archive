@@ -47,3 +47,8 @@ Thumbs.db
 .env
 *.env
 backend/.env
+
+# Firebase
+.firebase/
+firebase.json
+.firebaserc
