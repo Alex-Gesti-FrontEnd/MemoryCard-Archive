@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import gamesRouter from './routes/games.routes.js';
 import remindersRouter from './routes/reminders.routes.js';
+import authRouter from './routes/auth.routes.js';
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 
 app.use('/api/games', gamesRouter);
 app.use('/api/reminders', remindersRouter);
+app.use('/api/auth', authRouter);
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'API backend funcionando' }));
 
