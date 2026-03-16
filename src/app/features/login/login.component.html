@@ -1,0 +1,55 @@
+<section class="container-fluid">
+  <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 auth-wrapper">
+    <div class="auth-card shadow-lg rounded-4 overflow-hidden p-5 bg-light bg-opacity-25">
+      <h2 class="mb-4">Login</h2>
+
+      <form (submit)="onLogin($event)" class="d-flex flex-column gap-3">
+        <input
+          type="email"
+          placeholder="Email"
+          class="form-control"
+          [(ngModel)]="loginEmail"
+          name="loginEmail"
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          class="form-control"
+          [(ngModel)]="loginPassword"
+          name="loginPassword"
+          required
+        />
+
+        <button type="submit" class="btn btn-primary mt-2">Login</button>
+      </form>
+    </div>
+
+    <div class="auth-card shadow-lg rounded-4 overflow-hidden p-5 bg-dark text-white bg-opacity-75">
+      <h2 class="mb-4">Register</h2>
+
+      <form (submit)="onRegister($event)" class="d-flex flex-column gap-3">
+        <input
+          type="email"
+          placeholder="Email"
+          class="form-control"
+          [(ngModel)]="registerEmail"
+          name="registerEmail"
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          class="form-control"
+          [(ngModel)]="registerPassword"
+          name="registerPassword"
+          required
+        />
+
+        <button type="submit" class="btn btn-outline-light mt-2">Register</button>
+      </form>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,13 @@
+.auth-wrapper {
+  flex-direction: row;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.auth-card {
+  width: min(420px, 35vw);
+  min-width: 280px;
+  flex: 1 1 auto;
+}

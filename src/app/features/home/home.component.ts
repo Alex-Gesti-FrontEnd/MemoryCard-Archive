@@ -1,7 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+
+import { AuthService } from '../../core/services/auth.service';
 
 import { GamesService } from '../../core/services/games.service';
 import { GameModel } from '../../core/models/game.model';
@@ -22,6 +25,9 @@ type GameVersion = {
 export class HomeComponent implements OnInit {
   private fb = inject(FormBuilder);
   private gamesService = inject(GamesService);
+
+  private router = inject(Router);
+  private authService = inject(AuthService);
 
   showForm = signal(false);
   editingId = signal<number | null>(null);
@@ -51,6 +57,13 @@ export class HomeComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    const token = this.authService.token();
+
+    if (!token) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
     this.gamesService.fetchGames();
   }
 
@@ -197,5 +210,10 @@ export class HomeComponent implements OnInit {
     } finally {
       this.loadingPrice.set(false);
     }
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }
