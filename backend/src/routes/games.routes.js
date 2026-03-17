@@ -4,6 +4,7 @@ import { searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
 import { getAveragePrice, getAllEbayPrices } from '../services/ebay.service.js';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 function formatStore(s) {
   const tags = s.tags || {};
@@ -101,10 +102,13 @@ router.get('/ebay-prices', async (req, res) => {
 });
 
 // CRUD routes for local games database
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const connection = await getConnection();
-    const [rows] = await connection.query('SELECT * FROM games');
+
+    const userId = req.user.id;
+
+    const [rows] = await connection.query('SELECT * FROM games WHERE user_id = ?', [userId]);
 
     const formatted = rows.map((game) => ({
       ...game,
@@ -119,15 +123,25 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   const { name, platform, region, genre, releaseDate, avgPrice, image } = req.body;
+
   try {
     const connection = await getConnection();
+
+    const userId = req.user.id;
+
     const [result] = await connection.query(
-      'INSERT INTO games (name, platform, region, genre, releaseDate, avgPrice, image) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, platform, region, genre, releaseDate, avgPrice, image],
+      `
+      INSERT INTO games 
+      (user_id, name, platform, region, genre, releaseDate, avgPrice, image)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [userId, name, platform, region, genre, releaseDate, avgPrice, image],
     );
+
     await connection.end();
+
     res.status(201).json({ id: result.insertId, ...req.body });
   } catch (err) {
     console.error(err);
@@ -135,16 +149,26 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { name, platform, region, genre, releaseDate, avgPrice, image } = req.body;
+
   try {
     const connection = await getConnection();
+
+    const userId = req.user.id;
+
     await connection.query(
-      'UPDATE games SET name=?, platform=?, region=?, genre=?, releaseDate=?, avgPrice=?, image=? WHERE id=?',
-      [name, platform, region, genre, releaseDate, avgPrice, image, id],
+      `
+      UPDATE games 
+      SET name=?, platform=?, region=?, genre=?, releaseDate=?, avgPrice=?, image=? 
+      WHERE id=? AND user_id=?
+      `,
+      [name, platform, region, genre, releaseDate, avgPrice, image, id, userId], // 🔥 CAMBIO
     );
+
     await connection.end();
+
     res.json({ id, ...req.body });
   } catch (err) {
     console.error(err);
@@ -152,11 +176,19 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const connection = await getConnection();
-    await connection.query('DELETE FROM games WHERE id = ?', [req.params.id]);
+
+    const userId = req.user.id;
+
+    await connection.query('DELETE FROM games WHERE id = ? AND user_id = ?', [
+      req.params.id,
+      userId,
+    ]);
+
     await connection.end();
+
     res.status(204).send();
   } catch (err) {
     console.error(err);
