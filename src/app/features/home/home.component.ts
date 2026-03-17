@@ -50,6 +50,18 @@ export class HomeComponent implements OnInit {
   currentPage = signal(1);
   loading = signal(false);
 
+  searchTerm = signal('');
+  searchResults = signal<any[]>([]);
+  isSearching = signal(false);
+
+  searchTotal = signal(0);
+
+  totalPages = computed(() => {
+    if (!this.isSearching()) return 1;
+
+    return Math.ceil(this.searchTotal() / 50);
+  });
+
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
     platform: ['', Validators.required],
@@ -68,7 +80,7 @@ export class HomeComponent implements OnInit {
       return;
     }
 
-    this.loadGames();
+    this.loadGames(1);
   }
 
   sortedGames = computed(() => {
@@ -216,39 +228,101 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  async loadGames() {
-    if (this.loading()) return;
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 
+  async loadGames(page: number) {
     try {
       this.loading.set(true);
 
-      const page = this.currentPage();
-
       const data = await firstValueFrom(this.gamesService.getPopularGames(page));
 
-      const newGames = data || []; // 🔥 FIX
+      this.gamesExplore.set(data || []);
 
-      this.gamesExplore.update((games) => [...games, ...newGames]);
-
-      this.currentPage.update((p) => p + 1);
+      this.currentPage.set(page);
     } catch (err) {
       console.error(err);
     } finally {
       this.loading.set(false);
     }
   }
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+
+  goToPage(page: number) {
+    if (this.isSearching()) {
+      this.searchPage(page);
+    } else {
+      this.loadGames(page);
+    }
   }
 
-  @HostListener('window:scroll', [])
-  onScroll(): void {
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const threshold = document.body.offsetHeight - 200;
-
-    if (scrollPosition >= threshold) {
-      this.loadGames();
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.goToPage(this.currentPage() + 1);
     }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.goToPage(this.currentPage() - 1);
+    }
+  }
+
+  visiblePages = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+
+    if (total <= 1) return [1];
+
+    let start = current - 2;
+    let end = current + 2;
+
+    if (start < 1) {
+      start = 1;
+      end = Math.min(5, total);
+    }
+
+    if (end > total) {
+      end = total;
+      start = Math.max(1, total - 4);
+    }
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  });
+
+  async onSearch(value: string) {
+    this.searchTerm.set(value);
+
+    if (!value || value.length < 2) {
+      this.isSearching.set(false);
+      this.searchTotal.set(0);
+      return;
+    }
+
+    try {
+      this.isSearching.set(true);
+
+      const data = await firstValueFrom(this.gamesService.searchIGDB(value, this.currentPage()));
+
+      this.searchResults.set(data.results || []);
+      this.searchTotal.set(Number(data.total || 0));
+
+      this.currentPage.set(1);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async searchPage(page: number) {
+    const data = await firstValueFrom(this.gamesService.searchIGDB(this.searchTerm(), page));
+
+    this.searchResults.set(data.results || []);
+    this.currentPage.set(page);
   }
 }

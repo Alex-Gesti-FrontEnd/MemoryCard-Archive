@@ -42,8 +42,11 @@
 
 .games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 16px;
+  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 180px));
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .game-card {
@@ -104,6 +107,31 @@
     margin: 0;
     font-size: 0.7rem;
     color: #ccc;
+  }
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.page-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #eee;
+  }
+
+  &.active {
+    border-color: black;
+    font-weight: bold;
+    background: #ddd;
   }
 }
 

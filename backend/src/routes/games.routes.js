@@ -47,7 +47,7 @@ const router = express.Router();
 router.get('/igdb/popular', async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
-    const limit = 20;
+    const limit = 50;
     const offset = (page - 1) * limit;
 
     const games = await getPopularGames(limit, offset);
@@ -63,15 +63,16 @@ router.get('/igdb/popular', async (req, res) => {
 });
 
 // Route to search for a game by name in IGDB
-router.get('/igdb/:name', async (req, res) => {
+router.get('/igdb/search', async (req, res) => {
   try {
-    const game = await searchGameByName(req.params.name);
+    const { name, page } = req.query;
 
-    if (!game) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
+    const limit = 50;
+    const offset = (Number(page) - 1) * limit;
 
-    res.json(game);
+    const data = await searchGameByName(name, limit, offset);
+
+    res.json(data);
   } catch (error) {
     console.error(error);
     res.status(500).json({

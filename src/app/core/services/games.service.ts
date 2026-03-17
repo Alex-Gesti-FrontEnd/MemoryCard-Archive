@@ -38,8 +38,13 @@ export class GamesService {
     return this.http.get<any[]>(`${this.apiUrl}/igdb/popular?page=${page}`);
   }
 
-  searchIGDB(name: string) {
-    return this.http.get<any>(`${this.apiUrl}/igdb/${name}`);
+  searchIGDB(name: string, page: number = 1) {
+    return this.http.get<any>(`${this.apiUrl}/igdb/search`, {
+      params: {
+        name,
+        page,
+      },
+    });
   }
 
   getEbayPrice(name: string, platform: string, region: string) {

@@ -187,11 +187,19 @@
 
   <!--  GRID DE JUEGOS -->
 
+  <div class="mb-3">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Search games..."
+      (input)="onSearch($any($event.target).value)"
+    />
+  </div>
   <div class="games-grid mt-4">
-    @for (game of gamesExplore(); track game.id) {
+    @for (game of isSearching() ? searchResults() : gamesExplore(); track game.id) {
       <div class="game-card">
         <img
-          [src]="'https:' + game.cover?.url.replace('t_thumb', 't_cover_big')"
+          [src]="'https:' + game.cover?.url.replace('t_thumb', 't_cover_big_2x')"
           class="game-poster"
         />
 
@@ -204,5 +212,14 @@
         </div>
       </div>
     }
+  </div>
+  <div class="pagination-container my-4">
+    <button class="page-btn" (click)="prevPage()">←</button>
+    @for (p of visiblePages(); track p) {
+      <button class="page-btn" [class.active]="p === currentPage()" (click)="goToPage(p)">
+        {{ p }}
+      </button>
+    }
+    <button class="page-btn" (click)="nextPage()">→</button>
   </div>
 </section>

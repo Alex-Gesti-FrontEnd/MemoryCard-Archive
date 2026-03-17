@@ -23,7 +23,7 @@ async function getAccessToken() {
   return cachedToken;
 }
 
-export async function getPopularGames(limit = 20, offset = 0) {
+export async function getPopularGames(limit = 50, offset = 0) {
   const token = await getAccessToken();
 
   const now = Math.floor(Date.now() / 1000);
@@ -39,12 +39,19 @@ export async function getPopularGames(limit = 20, offset = 0) {
         name,
         cover.url,
         first_release_date,
-        platforms.name;
+        platforms.name,
+        game_type;
+
       where 
-        cover != null 
+        cover != null
         & first_release_date != null
-        & first_release_date <= ${now};
+        & first_release_date <= ${now}
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
+
       sort first_release_date desc;
+
       limit ${limit};
       offset ${offset};
     `,
@@ -53,8 +60,9 @@ export async function getPopularGames(limit = 20, offset = 0) {
   return response.json();
 }
 
-export async function searchGameByName(name) {
+export async function searchGameByName(name, limit = 50, offset = 0) {
   const token = await getAccessToken();
+  const now = Math.floor(Date.now() / 1000);
 
   const response = await fetch('https://api.igdb.com/v4/games', {
     method: 'POST',
@@ -65,16 +73,30 @@ export async function searchGameByName(name) {
     body: `
       fields 
         name,
-        genres.name,
-        release_dates.platform.name,
-        release_dates.region,
-        release_dates.date,
-        cover.url;
+        cover.url,
+        first_release_date,
+        platforms.name,
+        game_type;
+
       search "${name}";
-      limit 1;
+
+      where 
+        first_release_date != null
+        & first_release_date <= ${now}
+        & cover != null
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
+
+      limit ${limit};
+      offset ${offset};
     `,
   });
 
   const data = await response.json();
-  return data[0];
+
+  return {
+    results: data,
+    total: response.headers.get('X-Count'),
+  };
 }
