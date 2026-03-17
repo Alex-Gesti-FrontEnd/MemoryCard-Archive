@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -46,6 +46,10 @@ export class HomeComponent implements OnInit {
 
   gameCount = computed(() => this.games().length);
 
+  gamesExplore = signal<any[]>([]);
+  currentPage = signal(1);
+  loading = signal(false);
+
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
     platform: ['', Validators.required],
@@ -64,7 +68,7 @@ export class HomeComponent implements OnInit {
       return;
     }
 
-    this.gamesService.fetchGames();
+    this.loadGames();
   }
 
   sortedGames = computed(() => {
@@ -212,8 +216,39 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  async loadGames() {
+    if (this.loading()) return;
+
+    try {
+      this.loading.set(true);
+
+      const page = this.currentPage();
+
+      const data = await firstValueFrom(this.gamesService.getPopularGames(page));
+
+      const newGames = data || []; // 🔥 FIX
+
+      this.gamesExplore.update((games) => [...games, ...newGames]);
+
+      this.currentPage.update((p) => p + 1);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.loading.set(false);
+    }
+  }
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  @HostListener('window:scroll', [])
+  onScroll(): void {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const threshold = document.body.offsetHeight - 200;
+
+    if (scrollPosition >= threshold) {
+      this.loadGames();
+    }
   }
 }

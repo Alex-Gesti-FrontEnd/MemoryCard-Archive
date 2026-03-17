@@ -34,6 +34,10 @@ export class GamesService {
     });
   }
 
+  getPopularGames(page: number) {
+    return this.http.get<any[]>(`${this.apiUrl}/igdb/popular?page=${page}`);
+  }
+
   searchIGDB(name: string) {
     return this.http.get<any>(`${this.apiUrl}/igdb/${name}`);
   }

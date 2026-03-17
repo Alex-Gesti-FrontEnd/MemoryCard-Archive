@@ -1,6 +1,6 @@
 import express from 'express';
 import { getConnection } from '../db.js';
-import { searchGameByName } from '../services/igdb.service.js';
+import { getPopularGames, searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
 import { getAveragePrice, getAllEbayPrices } from '../services/ebay.service.js';
@@ -42,6 +42,25 @@ function formatStore(s) {
 }
 
 const router = express.Router();
+
+// Route to search for popular games in IGDB
+router.get('/igdb/popular', async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const games = await getPopularGames(limit, offset);
+
+    res.json(games);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: 'IGDB popular error',
+      error: error.message,
+    });
+  }
+});
 
 // Route to search for a game by name in IGDB
 router.get('/igdb/:name', async (req, res) => {

@@ -93,6 +93,9 @@
       </div>
     </form>
   }
+
+  <!-- TABLA -->
+
   <div class="table-responsive">
     <table class="table table-striped table-hover align-middle table-sm crud-table">
       <thead class="table-dark">
@@ -180,5 +183,26 @@
         }
       </tbody>
     </table>
+  </div>
+
+  <!--  GRID DE JUEGOS -->
+
+  <div class="games-grid mt-4">
+    @for (game of gamesExplore(); track game.id) {
+      <div class="game-card">
+        <img
+          [src]="'https:' + game.cover?.url.replace('t_thumb', 't_cover_big')"
+          class="game-poster"
+        />
+
+        <div class="game-info">
+          <h6>{{ game.name }}</h6>
+          <p>{{ game.platforms?.[0]?.name || 'Unknown platform' }}</p>
+          <p>
+            {{ game.first_release_date ? (game.first_release_date * 1000 | date: 'yyyy') : '----' }}
+          </p>
+        </div>
+      </div>
+    }
   </div>
 </section>
