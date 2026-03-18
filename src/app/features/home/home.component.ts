@@ -57,9 +57,7 @@ export class HomeComponent implements OnInit {
   searchTotal = signal(0);
 
   totalPages = computed(() => {
-    if (!this.isSearching()) return 1;
-
-    return Math.ceil(this.searchTotal() / 50);
+    return Math.ceil(this.searchTotal() / 50) || 1;
   });
 
   form = this.fb.nonNullable.group({
@@ -162,7 +160,7 @@ export class HomeComponent implements OnInit {
     this.platformsData.set([]);
   }
 
-  autoFillFromIGDB() {
+  /*autoFillFromIGDB() {
     const name = this.form.value.name;
     if (!name) return;
 
@@ -190,7 +188,7 @@ export class HomeComponent implements OnInit {
         region: '',
       });
     });
-  }
+  }*/
 
   onPlatformChange(selected: string) {
     const version = this.platformsData().find((v) => v.platform === selected);
@@ -239,7 +237,9 @@ export class HomeComponent implements OnInit {
 
       const data = await firstValueFrom(this.gamesService.getPopularGames(page));
 
-      this.gamesExplore.set(data || []);
+      this.gamesExplore.set(data.results || []);
+      this.searchTotal.set(Number(data.total || 0));
+      this.currentPage.set(page);
 
       this.currentPage.set(page);
     } catch (err) {
@@ -302,18 +302,19 @@ export class HomeComponent implements OnInit {
     if (!value || value.length < 2) {
       this.isSearching.set(false);
       this.searchTotal.set(0);
+      this.loadGames(1);
       return;
     }
 
     try {
       this.isSearching.set(true);
 
-      const data = await firstValueFrom(this.gamesService.searchIGDB(value, this.currentPage()));
+      this.currentPage.set(1);
+
+      const data = await firstValueFrom(this.gamesService.searchIGDB(value, 1));
 
       this.searchResults.set(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
-
-      this.currentPage.set(1);
     } catch (err) {
       console.error(err);
     }

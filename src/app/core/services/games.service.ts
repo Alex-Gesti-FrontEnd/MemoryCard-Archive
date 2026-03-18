@@ -35,15 +35,14 @@ export class GamesService {
   }
 
   getPopularGames(page: number) {
-    return this.http.get<any[]>(`${this.apiUrl}/igdb/popular?page=${page}`);
+    return this.http.get<{ results: any[]; total: number }>(
+      `${this.apiUrl}/igdb/popular?page=${page}`,
+    );
   }
 
   searchIGDB(name: string, page: number = 1) {
-    return this.http.get<any>(`${this.apiUrl}/igdb/search`, {
-      params: {
-        name,
-        page,
-      },
+    return this.http.get<{ results: any[]; total: number }>(`${this.apiUrl}/igdb/search`, {
+      params: { name, page },
     });
   }
 

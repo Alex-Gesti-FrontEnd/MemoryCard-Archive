@@ -57,7 +57,31 @@ export async function getPopularGames(limit = 50, offset = 0) {
     `,
   });
 
-  return response.json();
+  const results = await response.json();
+
+  const countResponse = await fetch('https://api.igdb.com/v4/games/count', {
+    method: 'POST',
+    headers: {
+      'Client-ID': process.env.IGDB_CLIENT_ID,
+      Authorization: `Bearer ${token}`,
+    },
+    body: `
+      where 
+        cover != null
+        & first_release_date != null
+        & first_release_date <= ${now}
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
+    `,
+  });
+
+  const countData = await countResponse.json();
+
+  return {
+    results,
+    total: countData.count || 0,
+  };
 }
 
 export async function searchGameByName(name, limit = 50, offset = 0) {
@@ -93,10 +117,31 @@ export async function searchGameByName(name, limit = 50, offset = 0) {
     `,
   });
 
-  const data = await response.json();
+  const results = await response.json();
+
+  const countResponse = await fetch('https://api.igdb.com/v4/games/count', {
+    method: 'POST',
+    headers: {
+      'Client-ID': process.env.IGDB_CLIENT_ID,
+      Authorization: `Bearer ${token}`,
+    },
+    body: `
+      search "${name}";
+
+      where 
+        first_release_date != null
+        & first_release_date <= ${now}
+        & cover != null
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
+    `,
+  });
+
+  const countData = await countResponse.json();
 
   return {
-    results: data,
-    total: response.headers.get('X-Count'),
+    results,
+    total: countData.count || 0,
   };
 }
