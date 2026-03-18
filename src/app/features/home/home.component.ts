@@ -56,6 +56,8 @@ export class HomeComponent implements OnInit {
 
   searchTotal = signal(0);
 
+  filtersOpen = signal(false);
+
   totalPages = computed(() => {
     return Math.ceil(this.searchTotal() / 50) || 1;
   });

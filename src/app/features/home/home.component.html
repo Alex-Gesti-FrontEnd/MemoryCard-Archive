@@ -1,4 +1,64 @@
 <section class="container mt-4">
+  <!-- ADVANCE SEARCH SIDEBAR -->
+  <div class="filters-toggle" [class.open]="filtersOpen()" (click)="filtersOpen.update(v => !v)">
+    Advanced Search
+  </div>
+  <div class="filters-sidebar" [class.open]="filtersOpen()">
+    <h5 class="mb-3">Advanced Search</h5>
+    <div class="mb-3">
+      <small>Platform</small>
+      <div class="filter-boxes mt-2">
+        @for (p of ['PC', 'PS5', 'Xbox', 'Switch']; track p) {
+          <div class="filter-box">
+            {{ p }}
+          </div>
+        }
+      </div>
+    </div>
+    <div class="mb-3">
+      <small>Genre</small>
+      <div class="filter-boxes mt-2">
+        @for (g of ['Action', 'RPG', 'Shooter', 'Sports']; track g) {
+          <div class="filter-box">
+            {{ g }}
+          </div>
+        }
+      </div>
+    </div>
+    <div class="mb-3">
+      <small>Year</small>
+      <div class="filter-boxes mt-2">
+        @for (y of ['2024', '2023', '2020s', '2010s']; track y) {
+          <div class="filter-box">
+            {{ y }}
+          </div>
+        }
+      </div>
+    </div>
+    <div class="mb-3">
+      <small>Type</small>
+      <div class="filter-boxes mt-2">
+        @for (t of ['Main Game', 'DLC', 'Expansion', 'Remake']; track t) {
+          <div class="filter-box">
+            {{ t }}
+          </div>
+        }
+      </div>
+    </div>
+    <div class="mb-3">
+      <small>Company</small>
+      <div class="filter-boxes mt-2">
+        @for (c of ['Nintendo', 'Sony', 'Microsoft', 'Ubisoft']; track c) {
+          <div class="filter-box">
+            {{ c }}
+          </div>
+        }
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline-light w-100 mt-3">Reset filters</button>
+  </div>
+
+  <!-- NORMAL PAGE -->
   <div class="d-flex justify-content-end mb-3">
     <button class="btn btn-outline-danger btn-sm" (click)="logout()">Logout</button>
   </div>
