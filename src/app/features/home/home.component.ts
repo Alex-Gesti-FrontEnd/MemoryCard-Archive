@@ -72,6 +72,14 @@ export class HomeComponent implements OnInit {
     image: [''],
   });
 
+  filters = signal({
+    platforms: [] as string[],
+    genres: [] as string[],
+    years: [] as string[],
+    types: [] as string[],
+    companies: [] as string[],
+  });
+
   ngOnInit(): void {
     const token = this.authService.token();
 
@@ -237,7 +245,9 @@ export class HomeComponent implements OnInit {
     try {
       this.loading.set(true);
 
-      const data = await firstValueFrom(this.gamesService.getPopularGames(page));
+      const data = await firstValueFrom(
+        this.gamesService.getPopularGames(page, this.buildFilterParams()),
+      );
 
       this.gamesExplore.set(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
@@ -323,9 +333,58 @@ export class HomeComponent implements OnInit {
   }
 
   async searchPage(page: number) {
-    const data = await firstValueFrom(this.gamesService.searchIGDB(this.searchTerm(), page));
+    const data = await firstValueFrom(
+      this.gamesService.searchIGDB(this.searchTerm(), page, this.buildFilterParams()),
+    );
 
     this.searchResults.set(data.results || []);
     this.currentPage.set(page);
+  }
+
+  toggleFilter(category: keyof ReturnType<typeof this.filters>, value: string) {
+    this.filters.update((f) => {
+      const exists = f[category].includes(value);
+
+      return {
+        ...f,
+        [category]: exists ? f[category].filter((v) => v !== value) : [...f[category], value],
+      };
+    });
+
+    this.applyFilters();
+  }
+
+  buildFilterParams() {
+    const f = this.filters();
+
+    return {
+      platforms: f.platforms.join(','),
+      genres: f.genres.join(','),
+      years: f.years.join(','),
+      types: f.types.join(','),
+      companies: f.companies.join(','),
+    };
+  }
+
+  applyFilters() {
+    this.currentPage.set(1);
+
+    if (this.isSearching()) {
+      this.searchPage(1);
+    } else {
+      this.loadGames(1);
+    }
+  }
+
+  resetFilters() {
+    this.filters.set({
+      platforms: [],
+      genres: [],
+      years: [],
+      types: [],
+      companies: [],
+    });
+
+    this.loadGames(1);
   }
 }

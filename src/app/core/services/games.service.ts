@@ -34,15 +34,22 @@ export class GamesService {
     });
   }
 
-  getPopularGames(page: number) {
-    return this.http.get<{ results: any[]; total: number }>(
-      `${this.apiUrl}/igdb/popular?page=${page}`,
-    );
+  getPopularGames(page: number, filters?: any) {
+    return this.http.get<any>(`${this.apiUrl}/igdb/popular`, {
+      params: {
+        page,
+        ...filters,
+      },
+    });
   }
 
-  searchIGDB(name: string, page: number = 1) {
-    return this.http.get<{ results: any[]; total: number }>(`${this.apiUrl}/igdb/search`, {
-      params: { name, page },
+  searchIGDB(name: string, page: number = 1, filters?: any) {
+    return this.http.get<any>(`${this.apiUrl}/igdb/search`, {
+      params: {
+        name,
+        page,
+        ...filters,
+      },
     });
   }
 
