@@ -58,6 +58,61 @@
     <button class="btn btn-sm btn-outline-light w-100 mt-3">Reset filters</button>
   </div>
 
+  <!-- GAME INFORMATION SIDEBAR -->
+  <div class="gameinfo-sidebar" [class.open]="gameOpen()">
+    @if (selectedGame()) {
+      <div class="game-hero" [style.height.%]="35">
+        <ng-container *ngFor="let img of images(); let i = index">
+          <img [src]="img" [class.active]="i === currentImageIndex()" />
+        </ng-container>
+        <div class="overlay"></div>
+        <div class="hero-content">
+          <h4>{{ selectedGame()?.name }}</h4>
+          <p class="platform-year">
+            {{ selectedGame()?.platforms?.[0]?.name || 'Unknown' }} •
+            {{
+              selectedGame()?.first_release_date
+                ? (selectedGame()?.first_release_date * 1000 | date: 'dd-MM-yyyy')
+                : '----'
+            }}
+          </p>
+          <p class="company">
+            {{ selectedGame()?.involved_companies?.[0]?.company?.name || '---' }}
+          </p>
+          <p class="rating">
+            {{
+              selectedGame()?.rating ? (selectedGame()?.rating | number: '1.0-0') + '/100' : '---'
+            }}
+          </p>
+        </div>
+      </div>
+      <div class="game-body">
+        <p class="summary">
+          {{ getShortSummary(selectedGame()?.summary) }}
+        </p>
+        <div class="selectors">
+          <div>
+            <small>Region</small>
+            <select class="form-select form-select-sm">
+              <option>PAL</option>
+              <option>NTSC-U</option>
+              <option>NTSC-J</option>
+              <option>Region Free</option>
+            </select>
+          </div>
+          <div>
+            <small>Format</small>
+            <select class="form-select form-select-sm">
+              <option>Physical</option>
+              <option>Digital</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-success w-100 mt-3">Add to collection</button>
+      </div>
+    }
+  </div>
+
   <!-- NORMAL PAGE -->
   <div class="d-flex justify-content-end mb-3">
     <button class="btn btn-outline-danger btn-sm" (click)="logout()">Logout</button>
@@ -257,14 +312,17 @@
   </div>
   <div class="games-grid mt-4">
     @for (game of isSearching() ? searchResults() : gamesExplore(); track game.id) {
-      <div class="game-card">
+      <div class="game-card" (click)="openGameInfo(game); $event.stopPropagation()">
         <img
-          [src]="'https:' + game.cover?.url.replace('t_thumb', 't_cover_big_2x')"
+          [src]="
+            game.cover?.url
+              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
+              : 'assets/no-image.png'
+          "
           class="game-poster"
         />
-
         <div class="game-info">
-          <h6>{{ game.name }}</h6>
+          <h6>{{ game.name || 'Unknown' }}</h6>
           <p>{{ game.platforms?.[0]?.name || 'Unknown platform' }}</p>
           <p>
             {{ game.first_release_date ? (game.first_release_date * 1000 | date: 'yyyy') : '----' }}

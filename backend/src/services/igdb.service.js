@@ -38,8 +38,14 @@ export async function getPopularGames(limit = 50, offset = 0) {
       fields 
         name,
         cover.url,
+        screenshots.url,
+        artworks.url,
         first_release_date,
         platforms.name,
+        genres.name,
+        involved_companies.company.name,
+        rating,
+        summary,
         game_type;
 
       where 
@@ -98,8 +104,14 @@ export async function searchGameByName(name, limit = 50, offset = 0) {
       fields 
         name,
         cover.url,
+        screenshots.url,
+        artworks.url,
         first_release_date,
         platforms.name,
+        genres.name,
+        involved_companies.company.name,
+        rating,
+        summary,
         game_type;
 
       search "${name}";

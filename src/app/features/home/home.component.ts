@@ -58,6 +58,13 @@ export class HomeComponent implements OnInit {
 
   filtersOpen = signal(false);
 
+  selectedGame = signal<any | null>(null);
+  gameOpen = signal(false);
+
+  images = signal<string[]>([]);
+  currentImageIndex = signal(0);
+  carouselInterval: any = null;
+
   totalPages = computed(() => {
     return Math.ceil(this.searchTotal() / 50) || 1;
   });
@@ -327,5 +334,69 @@ export class HomeComponent implements OnInit {
 
     this.searchResults.set(data.results || []);
     this.currentPage.set(page);
+  }
+
+  openGameInfo(game: any) {
+    if (this.selectedGame()?.id === game.id && this.gameOpen()) {
+      this.gameOpen.set(false);
+      return;
+    }
+
+    this.selectedGame.set(game);
+    this.gameOpen.set(true);
+
+    const imgs: string[] = [];
+
+    if (game.cover?.url) {
+      imgs.push('https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x'));
+    }
+
+    if (game.screenshots) {
+      game.screenshots.slice(0, 5 - imgs.length).forEach((s: any) => {
+        imgs.push('https:' + s.url.replace('t_thumb', 't_cover_big_2x'));
+      });
+    }
+
+    if (game.artworks && imgs.length < 9) {
+      game.artworks.slice(0, 9 - imgs.length).forEach((a: any) => {
+        imgs.push('https:' + a.url.replace('t_thumb', 't_cover_big_2x'));
+      });
+    }
+
+    this.images.set(imgs);
+    this.currentImageIndex.set(0);
+
+    if (this.carouselInterval) clearInterval(this.carouselInterval);
+
+    if (imgs.length > 0) {
+      this.carouselInterval = setInterval(() => {
+        this.currentImageIndex.update((i) => (i + 1) % this.images().length);
+      }, 3000);
+    }
+  }
+
+  getShortSummary(text: string | undefined): string {
+    if (!text) return 'No description available';
+
+    const short = text.split('.').slice(0, 2).join('.');
+
+    if (short.length > 500) {
+      return short.slice(0, 500) + '...';
+    }
+
+    return short + '.';
+  }
+
+  @HostListener('document:click', ['$event'])
+  handleClickOutside(event: MouseEvent) {
+    const sidebar = document.querySelector('.gameinfo-sidebar');
+
+    if (!sidebar) return;
+
+    const target = event.target as Node;
+
+    if (this.gameOpen() && !sidebar.contains(target)) {
+      this.gameOpen.set(false);
+    }
   }
 }
