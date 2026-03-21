@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { GameModel } from '../models/game.model';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +17,10 @@ export class GamesService {
     this.http.get<GameModel[]>(this.apiUrl).subscribe((data) => this.games.set(data));
   }
 
+  async getUserGames(): Promise<GameModel[]> {
+    return await firstValueFrom(this.http.get<GameModel[]>(this.apiUrl));
+  }
+
   addGame(game: GameModel) {
     this.http.post<GameModel>(this.apiUrl, game).subscribe((newGame) => {
       this.games.update((old) => [...old, newGame]);
@@ -28,10 +33,9 @@ export class GamesService {
     });
   }
 
-  deleteGame(id: number) {
-    this.http.delete(`${this.apiUrl}/${id}`).subscribe(() => {
-      this.games.update((list) => list.filter((g) => g.id !== id));
-    });
+  async deleteGame(id: number): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`));
+    this.games.update((list) => list.filter((g) => g.id !== id));
   }
 
   getPopularGames(page: number) {

@@ -6,13 +6,6 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 
 import { GamesService } from '../../core/services/games.service';
-import { GameModel } from '../../core/models/game.model';
-
-type GameVersion = {
-  platform: string;
-  region: string;
-  releaseDate: string;
-};
 
 @Component({
   selector: 'app-home',
@@ -25,7 +18,7 @@ export class HomeComponent implements OnInit {
   private gamesService = inject(GamesService);
 
   private router = inject(Router);
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
 
   gamesExplore = signal<any[]>([]);
   currentPage = signal(1);

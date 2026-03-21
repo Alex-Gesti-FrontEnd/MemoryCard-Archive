@@ -11,6 +11,7 @@ export class AuthService {
   private api = 'http://localhost:3000/api/auth';
 
   token = signal<string | null>(localStorage.getItem('token'));
+  userEmail = signal<string | null>(null);
 
   async login(email: string, password: string) {
     const response: any = await firstValueFrom(
@@ -19,6 +20,8 @@ export class AuthService {
 
     localStorage.setItem('token', response.token);
     this.token.set(response.token);
+
+    this.userEmail.set(email);
 
     return response;
   }
@@ -38,5 +41,10 @@ export class AuthService {
 
   isLoggedIn() {
     return !!this.token();
+  }
+
+  getUserName() {
+    if (!this.userEmail()) return '';
+    return this.userEmail()!.split('@')[0];
   }
 }
