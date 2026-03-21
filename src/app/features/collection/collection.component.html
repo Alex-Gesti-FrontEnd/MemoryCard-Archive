@@ -1,0 +1,13 @@
+<div class="games-grid mt-4">
+  @for (game of games(); track game.id) {
+    <div class="game-card">
+      <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
+
+      <div class="game-info">
+        <h6>{{ game.name }}</h6>
+        <p>{{ game.platform }} • {{ game.region }}</p>
+        <p>{{ game.releaseDate | date: 'yyyy' }}</p>
+      </div>
+    </div>
+  }
+</div>

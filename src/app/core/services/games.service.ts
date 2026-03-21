@@ -45,13 +45,4 @@ export class GamesService {
       params: { name, page },
     });
   }
-
-  getEbayPrice(name: string, platform: string, region: string) {
-    return this.http.get<{ median: number; count: number; currency: string }>(
-      `${this.apiUrl}/price`,
-      {
-        params: { name, platform, region },
-      },
-    );
-  }
 }

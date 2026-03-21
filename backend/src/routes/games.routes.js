@@ -3,7 +3,6 @@ import { getConnection } from '../db.js';
 import { getPopularGames, searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
-import { getAveragePrice, getAllEbayPrices } from '../services/ebay.service.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 
 function formatStore(s) {
@@ -82,46 +81,7 @@ router.get('/igdb/search', async (req, res) => {
   }
 });
 
-// EBAY average price
-router.get('/price', async (req, res) => {
-  const { name, platform, region } = req.query;
-
-  if (!name || !platform || !region) {
-    return res.status(400).json({ message: 'name, platform and region required' });
-  }
-
-  try {
-    const searchQuery = `${name} ${platform} ${region}`;
-
-    const result = await getAveragePrice(searchQuery);
-
-    if (!result) {
-      return res.status(404).json({ message: 'No prices found' });
-    }
-
-    res.json(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'eBay error', error: err.message });
-  }
-});
-
-// EBAY all prices for histogram
-router.get('/ebay-prices', async (req, res) => {
-  const { name, platform, region } = req.query;
-  if (!name || !platform || !region) return res.status(400).json({ message: 'Faltan parámetros' });
-
-  try {
-    const query = `${name} ${platform} ${region}`;
-    const prices = await getAllEbayPrices(query);
-    res.json(prices);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error eBay', error: err.message });
-  }
-});
-
-// CRUD routes for local games database
+// Routes for local games database
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const connection = await getConnection();
@@ -144,20 +104,29 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 router.post('/', authMiddleware, async (req, res) => {
-  const { name, platform, region, genre, releaseDate, avgPrice, image } = req.body;
+  const { name, platform, region, genre, releaseDate, image, status, format } = req.body;
 
   try {
     const connection = await getConnection();
-
     const userId = req.user.id;
 
     const [result] = await connection.query(
       `
       INSERT INTO games 
-      (user_id, name, platform, region, genre, releaseDate, avgPrice, image)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, name, platform, region, genre, releaseDate, image, status, format)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [userId, name, platform, region, genre, releaseDate, avgPrice, image],
+      [
+        userId,
+        name,
+        platform,
+        region,
+        genre,
+        releaseDate,
+        image,
+        status || 'backlog',
+        format || 'physical',
+      ],
     );
 
     await connection.end();
@@ -171,20 +140,19 @@ router.post('/', authMiddleware, async (req, res) => {
 
 router.put('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { name, platform, region, genre, releaseDate, avgPrice, image } = req.body;
+  const { name, platform, region, genre, releaseDate, image, status, format } = req.body;
 
   try {
     const connection = await getConnection();
-
     const userId = req.user.id;
 
     await connection.query(
       `
       UPDATE games 
-      SET name=?, platform=?, region=?, genre=?, releaseDate=?, avgPrice=?, image=? 
+      SET name=?, platform=?, region=?, genre=?, releaseDate=?, image=?, status=?, format=?
       WHERE id=? AND user_id=?
       `,
-      [name, platform, region, genre, releaseDate, avgPrice, image, id, userId], // 🔥 CAMBIO
+      [name, platform, region, genre, releaseDate, image, status, format, id, userId],
     );
 
     await connection.end();
