@@ -41,6 +41,8 @@ export async function getPopularGames(limit = 50, offset = 0) {
         screenshots.url,
         artworks.url,
         first_release_date,
+        release_dates.date,
+        release_dates.platform.name,
         platforms.name,
         genres.name,
         involved_companies.company.name,
@@ -84,8 +86,13 @@ export async function getPopularGames(limit = 50, offset = 0) {
 
   const countData = await countResponse.json();
 
+  const mappedResults = results.map((g) => ({
+    ...g,
+    main_platform: getMainPlatform(g),
+  }));
+
   return {
-    results,
+    results: mappedResults,
     total: countData.count || 0,
   };
 }
@@ -107,6 +114,8 @@ export async function searchGameByName(name, limit = 50, offset = 0) {
         screenshots.url,
         artworks.url,
         first_release_date,
+        release_dates.date,
+        release_dates.platform.name,
         platforms.name,
         genres.name,
         involved_companies.company.name,
@@ -152,8 +161,29 @@ export async function searchGameByName(name, limit = 50, offset = 0) {
 
   const countData = await countResponse.json();
 
+  const mappedResults = results.map((g) => ({
+    ...g,
+    main_platform: getMainPlatform(g),
+  }));
+
   return {
-    results,
+    results: mappedResults,
     total: countData.count || 0,
   };
+}
+
+function getMainPlatform(game) {
+  if (!game.release_dates || game.release_dates.length === 0) {
+    return game.platforms?.[0] || null;
+  }
+
+  const validReleases = game.release_dates.filter((r) => r.platform && r.date);
+
+  if (validReleases.length === 0) {
+    return game.platforms?.[0] || null;
+  }
+
+  const sorted = validReleases.sort((a, b) => a.date - b.date);
+
+  return sorted[0].platform || null;
 }

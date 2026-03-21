@@ -375,6 +375,23 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  getGameTypeLabel(type: number | undefined): string {
+    const map: Record<number, string> = {
+      0: 'Game',
+      1: 'DLC',
+      2: 'Expansion',
+      3: 'Bundle',
+      4: 'Expansion',
+      8: 'Remake',
+      9: 'Remaster',
+      10: 'Expanded',
+      11: 'Port',
+      12: 'Fangame',
+    };
+
+    return map[type ?? -1] || 'Other';
+  }
+
   getShortSummary(text: string | undefined): string {
     if (!text) return 'No description available';
 

@@ -354,6 +354,85 @@ select {
   border: 1px solid #333;
 }
 
+// GAME TAGS
+
+.game-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+
+  border-radius: 6px;
+  color: #fff;
+
+  z-index: 2;
+
+  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+
+  letter-spacing: 0.3px;
+}
+
+.game-tag.big {
+  position: static;
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+// TAG COLORS
+
+.tag-game {
+  background: rgba(46, 204, 113, 0.9);
+}
+
+.tag-dlc {
+  background: rgba(108, 92, 231, 0.9);
+}
+
+.tag-expansion {
+  background: rgba(0, 184, 148, 0.9);
+}
+
+.tag-bundle {
+  background: rgba(241, 196, 15, 0.9);
+  color: #000;
+}
+
+.tag-remake {
+  background: rgba(231, 76, 60, 0.9);
+}
+
+.tag-remaster {
+  background: rgba(230, 126, 34, 0.9);
+}
+
+.tag-port {
+  background: rgba(52, 152, 219, 0.9);
+}
+
+.tag-fangame {
+  background: rgba(255, 118, 117, 0.9);
+}
+
+.tag-expanded {
+  background: rgba(149, 165, 166, 0.9);
+}
+
+.tag-other {
+  background: rgba(99, 110, 114, 0.9);
+}
+
 @media (max-width: 768px) {
   table {
     font-size: 0.8rem;
