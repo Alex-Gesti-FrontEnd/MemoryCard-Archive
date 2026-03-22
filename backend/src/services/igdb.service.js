@@ -172,6 +172,33 @@ export async function searchGameByName(name, limit = 50, offset = 0) {
   };
 }
 
+export async function getGameById(id) {
+  const token = await getAccessToken();
+
+  const response = await fetch('https://api.igdb.com/v4/games', {
+    method: 'POST',
+    headers: {
+      'Client-ID': process.env.IGDB_CLIENT_ID,
+      Authorization: `Bearer ${token}`,
+    },
+    body: `
+      fields 
+        name,
+        rating,
+        summary,
+        screenshots.url,
+        artworks.url,
+        involved_companies.company.name;
+
+      where id = ${id};
+    `,
+  });
+
+  const data = await response.json();
+
+  return data[0];
+}
+
 function getMainPlatform(game) {
   if (!game.release_dates || game.release_dates.length === 0) {
     return game.platforms?.[0] || null;

@@ -230,6 +230,7 @@ export class HomeComponent implements OnInit {
 
   addToCollection(game: any, region: string, format: string) {
     const newGame = {
+      igdb_id: game.id,
       name: game.name,
       platform: game.main_platform?.name || 'Unknown',
       region,
