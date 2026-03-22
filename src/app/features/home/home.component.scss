@@ -53,6 +53,7 @@
   transition: all 0.3s ease;
 
   backdrop-filter: blur(0.5px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 
   h6 {
     margin: 0;
@@ -310,6 +311,37 @@ select {
   background: #111;
   color: white;
   border: 1px solid #333;
+}
+
+.collection-confirmation {
+  color: rgb(0, 211, 0);
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+
+  animation: slideFade 2s forwards;
+}
+
+@keyframes slideFade {
+  0% {
+    opacity: 0;
+    transform: translateX(0%) translateY(-10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(0%) translateY(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(0%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0%) translateY(10px);
+  }
 }
 
 // GAME TAGS

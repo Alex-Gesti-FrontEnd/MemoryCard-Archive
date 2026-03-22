@@ -1,22 +1,21 @@
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
-
 import { GamesService } from '../../core/services/games.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent implements OnInit {
   private gamesService = inject(GamesService);
-
   private router = inject(Router);
   authService = inject(AuthService);
 
@@ -35,9 +34,14 @@ export class HomeComponent implements OnInit {
   selectedGame = signal<any | null>(null);
   gameOpen = signal(false);
 
+  selectedRegion = signal('PAL');
+  selectedFormat = signal('Physical');
+
   images = signal<string[]>([]);
   currentImageIndex = signal(0);
   carouselInterval: any = null;
+
+  showConfirmation = signal(false);
 
   totalPages = computed(() => {
     return Math.ceil(this.searchTotal() / 50) || 1;
@@ -67,8 +71,6 @@ export class HomeComponent implements OnInit {
 
       this.gamesExplore.set(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
-      this.currentPage.set(page);
-
       this.currentPage.set(page);
     } catch (err) {
       console.error(err);
@@ -192,6 +194,9 @@ export class HomeComponent implements OnInit {
         this.currentImageIndex.update((i) => (i + 1) % this.images().length);
       }, 3000);
     }
+
+    this.selectedRegion.set('PAL');
+    this.selectedFormat.set('Physical');
   }
 
   getGameTypeLabel(type: number | undefined): string {
@@ -235,9 +240,14 @@ export class HomeComponent implements OnInit {
       status: 'backlog',
       format: format.toLowerCase(),
       image: game.cover ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big') : '',
+      game_url: game.slug ? `https://www.igdb.com/games/${game.slug}` : null,
+      game_type: game.game_type ?? 0,
     };
 
     this.gamesService.addGame(newGame as any);
+
+    this.showConfirmation.set(true);
+    setTimeout(() => this.showConfirmation.set(false), 2000);
   }
 
   @HostListener('document:click', ['$event'])

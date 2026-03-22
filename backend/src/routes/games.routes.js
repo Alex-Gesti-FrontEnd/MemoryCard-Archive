@@ -104,7 +104,8 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 router.post('/', authMiddleware, async (req, res) => {
-  const { name, platform, region, genre, releaseDate, image, status, format } = req.body;
+  const { name, platform, region, genre, releaseDate, image, status, format, game_url, game_type } =
+    req.body;
 
   try {
     const connection = await getConnection();
@@ -113,8 +114,8 @@ router.post('/', authMiddleware, async (req, res) => {
     const [result] = await connection.query(
       `
       INSERT INTO games 
-      (user_id, name, platform, region, genre, releaseDate, image, status, format)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -126,6 +127,8 @@ router.post('/', authMiddleware, async (req, res) => {
         image,
         status || 'backlog',
         format || 'physical',
+        game_url || null,
+        game_type ?? 0,
       ],
     );
 
@@ -140,7 +143,8 @@ router.post('/', authMiddleware, async (req, res) => {
 
 router.put('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { name, platform, region, genre, releaseDate, image, status, format } = req.body;
+  const { name, platform, region, genre, releaseDate, image, status, format, game_url, game_type } =
+    req.body;
 
   try {
     const connection = await getConnection();
@@ -149,10 +153,23 @@ router.put('/:id', authMiddleware, async (req, res) => {
     await connection.query(
       `
       UPDATE games 
-      SET name=?, platform=?, region=?, genre=?, releaseDate=?, image=?, status=?, format=?
+      SET name=?, platform=?, region=?, genre=?, releaseDate=?, image=?, status=?, format=?, game_url=?, game_type=?
       WHERE id=? AND user_id=?
       `,
-      [name, platform, region, genre, releaseDate, image, status, format, id, userId],
+      [
+        name,
+        platform,
+        region,
+        genre,
+        releaseDate,
+        image,
+        status,
+        format,
+        game_url,
+        game_type,
+        id,
+        userId,
+      ],
     );
 
     await connection.end();

@@ -99,7 +99,11 @@
         <div class="selectors">
           <div>
             <small>Region</small>
-            <select class="form-select form-select-sm">
+            <select
+              class="form-select form-select-sm"
+              [ngModel]="selectedRegion()"
+              (ngModelChange)="selectedRegion.set($any($event))"
+            >
               <option>PAL</option>
               <option>NTSC-U</option>
               <option>NTSC-J</option>
@@ -108,7 +112,11 @@
           </div>
           <div>
             <small>Format</small>
-            <select class="form-select form-select-sm">
+            <select
+              class="form-select form-select-sm"
+              [ngModel]="selectedFormat()"
+              (ngModelChange)="selectedFormat.set($any($event))"
+            >
               <option>Physical</option>
               <option>Digital</option>
             </select>
@@ -116,10 +124,11 @@
         </div>
         <button
           class="btn btn-success w-100 mt-3"
-          (click)="addToCollection(selectedGame(), 'PAL', 'Physical')"
+          (click)="addToCollection(selectedGame(), selectedRegion(), selectedFormat())"
         >
           Add to collection
         </button>
+        <div class="collection-confirmation" *ngIf="showConfirmation()">Added to collection</div>
       </div>
     }
   </div>

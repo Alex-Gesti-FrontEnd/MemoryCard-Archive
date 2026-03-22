@@ -6,7 +6,8 @@ export interface GameModel {
   genre?: string;
   releaseDate?: string;
   image?: string;
-
   status?: 'backlog' | 'playing' | 'completed';
   format?: 'physical' | 'digital';
+  game_url?: string;
+  game_type?: number;
 }

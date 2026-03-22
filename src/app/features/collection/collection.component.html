@@ -4,7 +4,11 @@
       My Collection <span class="text-muted fs-6">({{ games().length }} games)</span>
     </h2>
     <div>
-      <select class="form-select form-select-sm" [(ngModel)]="statusFilter">
+      <select
+        class="form-select form-select-sm"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event)"
+      >
         <option value="all">All</option>
         <option value="backlog">Backlog</option>
         <option value="playing">Playing</option>
@@ -13,18 +17,34 @@
     </div>
   </div>
 
-  <div class="games-grid mt-3">
+  <div class="games-grid mt-4">
     <div class="game-card" *ngFor="let game of filteredGames()">
-      <span class="game-tag" [ngClass]="'tag-' + game.status">{{ game.status }}</span>
+      <span class="game-tag" [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()">
+        {{ getGameTypeLabel(game.game_type) }}
+      </span>
+      <div class="delete-btn" (click)="openDeleteModal(game)">✕</div>
       <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
+
       <div class="game-info">
         <h6>{{ game.name }}</h6>
-        <p>{{ game.platform }} • {{ game.region }}</p>
-        <p>Format: {{ game.format | titlecase }}</p>
-        <p>Added: {{ game.created_at | date: 'dd-MM-yyyy' }}</p>
-        <button class="btn btn-sm btn-outline-danger mt-1 w-100" (click)="removeGame(game.id)">
-          Delete
-        </button>
+        <p>{{ game.platform }} • {{ game.releaseDate | date: 'yyyy' : '----' }}</p>
+        <p>{{ game.region }} • {{ game.format | titlecase }} • {{ game.status }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DELETE -->
+  <div class="custom-modal" *ngIf="showDeleteModal()">
+    <div class="modal-content">
+      <h5>Delete game</h5>
+      <p>
+        Are you sure you want to delete <strong>{{ gameToDelete()?.name }}</strong
+        >?
+      </p>
+
+      <div class="modal-actions">
+        <button class="btn btn-sm btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-sm btn-danger" (click)="confirmDelete()">Delete</button>
       </div>
     </div>
   </div>
