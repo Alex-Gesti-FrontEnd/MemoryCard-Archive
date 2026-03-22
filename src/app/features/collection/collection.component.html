@@ -18,7 +18,12 @@
   </div>
 
   <div class="games-grid mt-4">
-    <div class="game-card" *ngFor="let game of filteredGames()">
+    <div
+      class="game-card"
+      *ngFor="let game of filteredGames()"
+      [attr.data-id]="game.id"
+      (click)="openZoom(game, $event)"
+    >
       <span class="game-tag" [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()">
         {{ getGameTypeLabel(game.game_type) }}
       </span>
@@ -30,6 +35,37 @@
         <p>{{ game.platform }} • {{ game.releaseDate | date: 'yyyy' : '----' }}</p>
         <p>{{ game.region }} • {{ game.format | titlecase }} • {{ game.status }}</p>
       </div>
+    </div>
+  </div>
+
+  <!-- ZOOM MODAL -->
+  <div *ngIf="zoomVisible()" class="zoom-modal" [ngStyle]="zoomStyle()">
+    <div class="zoom-bg" [ngStyle]="{ 'background-image': getZoomBackground() }"></div>
+    <div class="zoom-content" [class.visible]="zoomContentVisible()">
+      <div class="zoom-tags">
+        <span
+          class="game-tag my-2 mx-2"
+          [ngClass]="'tag-' + getGameTypeLabel(zoomGame()?.game_type).toLowerCase()"
+        >
+          {{ getGameTypeLabel(zoomGame()?.game_type) }}
+        </span>
+      </div>
+      <div class="zoom-info">
+        <h3>{{ zoomGame()?.name }}</h3>
+        <p>{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-MM-yyyy' }}</p>
+        <p>{{ zoomGame()?.region }} • {{ zoomGame()?.format }}</p>
+        <p>{{ zoomGame()?.genre }}</p>
+      </div>
+      <div class="zoom-tags mb-2">
+        <span
+          class="status-tag"
+          [ngClass]="'status-' + zoomGame()?.status"
+          (click)="cycleStatus(zoomGame())"
+        >
+          {{ zoomGame()?.status }}
+        </span>
+      </div>
+      <div class="close-btn" (click)="closeZoom()">✕</div>
     </div>
   </div>
 

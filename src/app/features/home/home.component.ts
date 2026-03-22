@@ -239,7 +239,7 @@ export class HomeComponent implements OnInit {
         : null,
       status: 'backlog',
       format: format.toLowerCase(),
-      image: game.cover ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big') : '',
+      image: game.cover ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x') : '',
       game_url: game.slug ? `https://www.igdb.com/games/${game.slug}` : null,
       game_type: game.game_type ?? 0,
     };
