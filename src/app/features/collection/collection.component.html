@@ -58,6 +58,9 @@
         <p>{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-MM-yyyy' }}</p>
         <p>{{ zoomGame()?.region }} • {{ zoomGame()?.format }}</p>
         <p>{{ zoomGame()?.genre }}</p>
+        <p class="summary">
+          {{ getShortSummary(zoomGame()?.summary ?? '') }}
+        </p>
       </div>
       <div class="zoom-tags mb-2">
         <span

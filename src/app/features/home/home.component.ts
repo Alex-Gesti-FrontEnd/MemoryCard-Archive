@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { GamesService } from '../../core/services/games.service';
+import { GameModel } from '../../core/models/game.model';
 
 @Component({
   selector: 'app-home',
@@ -228,8 +229,8 @@ export class HomeComponent implements OnInit {
     return short + '.';
   }
 
-  addToCollection(game: any, region: string, format: string) {
-    const newGame = {
+  async addToCollection(game: any, region: string, format: string) {
+    const newGame: GameModel = {
       name: game.name,
       platform: game.main_platform?.name || 'Unknown',
       region,
@@ -238,14 +239,18 @@ export class HomeComponent implements OnInit {
         ? new Date(game.first_release_date * 1000).toISOString().slice(0, 10)
         : null,
       status: 'backlog',
-      format: format.toLowerCase(),
+      format: format.toLowerCase() as 'physical' | 'digital',
       image: game.cover ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x') : '',
       game_url: game.slug ? `https://www.igdb.com/games/${game.slug}` : null,
       game_type: game.game_type ?? 0,
+      summary: game.summary || null,
+      rating: game.rating || null,
+      screenshots: game.screenshots || [],
+      artworks: game.artworks || [],
+      companies: game.involved_companies || [],
     };
 
-    this.gamesService.addGame(newGame as any);
-
+    await this.gamesService.addGame(newGame);
     this.showConfirmation.set(true);
     setTimeout(() => this.showConfirmation.set(false), 2000);
   }

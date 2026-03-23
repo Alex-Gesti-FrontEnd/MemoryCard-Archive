@@ -160,6 +160,18 @@ export class CollectionComponent implements OnInit {
     this.games.update((g) => [...g]);
   }
 
+  getShortSummary(text: string | undefined): string {
+    if (!text) return 'No description available';
+
+    const short = text.split('.').slice(0, 3).join('.');
+
+    if (short.length > 300) {
+      return short.slice(0, 300) + '...';
+    }
+
+    return short + '.';
+  }
+
   openDeleteModal(game: GameModel) {
     this.gameToDelete.set(game);
     this.showDeleteModal.set(true);

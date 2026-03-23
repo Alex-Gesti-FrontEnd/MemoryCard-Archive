@@ -21,9 +21,11 @@ export class GamesService {
     return await firstValueFrom(this.http.get<GameModel[]>(this.apiUrl));
   }
 
-  addGame(game: GameModel) {
-    this.http.post<GameModel>(this.apiUrl, game).subscribe((newGame) => {
+  addGame(game: GameModel): Promise<GameModel> {
+    return firstValueFrom(this.http.post<GameModel>(this.apiUrl, game)).then((newGame) => {
       this.games.update((old) => [...old, newGame]);
+      console.log('Enviando juego:', newGame);
+      return newGame;
     });
   }
 

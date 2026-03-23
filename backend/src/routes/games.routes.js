@@ -92,7 +92,14 @@ router.get('/', authMiddleware, async (req, res) => {
 
     const formatted = rows.map((game) => ({
       ...game,
-      releaseDate: game.releaseDate ? game.releaseDate.toISOString().split('T')[0] : null,
+      releaseDate: game.releaseDate || null,
+      screenshots:
+        typeof game.screenshots === 'string'
+          ? JSON.parse(game.screenshots)
+          : game.screenshots || [],
+      artworks: typeof game.artworks === 'string' ? JSON.parse(game.artworks) : game.artworks || [],
+      companies:
+        typeof game.companies === 'string' ? JSON.parse(game.companies) : game.companies || [],
     }));
 
     res.json(formatted);
@@ -104,8 +111,23 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 router.post('/', authMiddleware, async (req, res) => {
-  const { name, platform, region, genre, releaseDate, image, status, format, game_url, game_type } =
-    req.body;
+  const {
+    name,
+    platform,
+    region,
+    genre,
+    releaseDate,
+    image,
+    status,
+    format,
+    game_url,
+    game_type,
+    summary,
+    rating,
+    screenshots,
+    artworks,
+    companies,
+  } = req.body;
 
   try {
     const connection = await getConnection();
@@ -114,8 +136,9 @@ router.post('/', authMiddleware, async (req, res) => {
     const [result] = await connection.query(
       `
       INSERT INTO games 
-      (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type,
+       summary, rating, screenshots, artworks, companies)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -129,6 +152,11 @@ router.post('/', authMiddleware, async (req, res) => {
         format || 'physical',
         game_url || null,
         game_type ?? 0,
+        summary || null,
+        rating || null,
+        JSON.stringify(screenshots || []),
+        JSON.stringify(artworks || []),
+        JSON.stringify(companies || []),
       ],
     );
 
@@ -143,8 +171,24 @@ router.post('/', authMiddleware, async (req, res) => {
 
 router.put('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { name, platform, region, genre, releaseDate, image, status, format, game_url, game_type } =
-    req.body;
+
+  const {
+    name,
+    platform,
+    region,
+    genre,
+    releaseDate,
+    image,
+    status,
+    format,
+    game_url,
+    game_type,
+    summary,
+    rating,
+    screenshots,
+    artworks,
+    companies,
+  } = req.body;
 
   try {
     const connection = await getConnection();
@@ -153,7 +197,22 @@ router.put('/:id', authMiddleware, async (req, res) => {
     await connection.query(
       `
       UPDATE games 
-      SET name=?, platform=?, region=?, genre=?, releaseDate=?, image=?, status=?, format=?, game_url=?, game_type=?
+      SET 
+        name=?,
+        platform=?,
+        region=?,
+        genre=?,
+        releaseDate=?,
+        image=?,
+        status=?,
+        format=?,
+        game_url=?,
+        game_type=?,
+        summary=?,
+        rating=?,
+        screenshots=?,
+        artworks=?,
+        companies=?
       WHERE id=? AND user_id=?
       `,
       [
@@ -167,6 +226,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
         format,
         game_url,
         game_type,
+        summary || null,
+        rating || null,
+        JSON.stringify(screenshots || []),
+        JSON.stringify(artworks || []),
+        JSON.stringify(companies || []),
         id,
         userId,
       ],
