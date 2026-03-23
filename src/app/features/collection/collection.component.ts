@@ -5,7 +5,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GameModel } from '../../core/models/game.model';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-collection',
@@ -31,8 +30,6 @@ export class CollectionComponent implements OnInit {
   zoomStyle = signal<any>({});
   zoomVisible = signal(false);
   zoomContentVisible = signal(false);
-
-  gameDetailsCache = new Map<number, any>();
 
   filteredGames = computed(() => {
     if (this.statusFilter() === 'all') return this.games();
@@ -78,7 +75,7 @@ export class CollectionComponent implements OnInit {
     }
   }
 
-  async openZoom(game: GameModel, event: MouseEvent) {
+  openZoom(game: GameModel, event: MouseEvent) {
     if (this.zoomVisible()) return;
 
     const card = event.currentTarget as HTMLElement;
@@ -98,30 +95,6 @@ export class CollectionComponent implements OnInit {
     this.zoomGame.set(game);
     this.zoomVisible.set(true);
     this.zoomContentVisible.set(false);
-
-    if (game.igdb_id) {
-      if (this.gameDetailsCache.has(game.igdb_id)) {
-        const extra = this.gameDetailsCache.get(game.igdb_id);
-
-        this.zoomGame.update((g) => ({
-          ...g!,
-          ...extra,
-        }));
-      } else {
-        try {
-          const extra = await firstValueFrom(this.gamesService.getGameDetails(game.igdb_id));
-
-          this.gameDetailsCache.set(game.igdb_id, extra);
-
-          this.zoomGame.update((g) => ({
-            ...g!,
-            ...extra,
-          }));
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    }
 
     setTimeout(() => {
       this.zoomStyle.update((s) => ({

@@ -130,9 +130,31 @@
   display: flex;
   z-index: 1;
 
+  .game-tag {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 6px;
+  }
+
   .status-tag {
-    position: static;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 6px;
     cursor: pointer;
+
+    &.status-backlog {
+      background: #7f8c8d;
+    }
+    &.status-playing {
+      background: #3498db;
+    }
+    &.status-completed {
+      background: #2ecc71;
+    }
   }
 }
 
@@ -281,54 +303,6 @@
   text-transform: uppercase;
   font-size: 0.65rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-//  STATUS TAGS
-
-.status-tag {
-  position: absolute;
-  top: 36px;
-  left: 8px;
-
-  padding: 3px 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.65rem;
-
-  border-radius: 6px;
-  color: #fff;
-
-  z-index: 2;
-
-  backdrop-filter: blur(6px);
-  background: rgba(0, 0, 0, 0.7);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-
-  letter-spacing: 0.3px;
-}
-
-.status-tag.big {
-  position: static;
-  display: inline-block;
-  margin-bottom: 6px;
-  font-size: 0.8rem;
-
-  text-transform: uppercase;
-  font-size: 0.65rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.status-backlog {
-  background: #7f8c8d;
-}
-
-.status-playing {
-  background: #3498db;
-}
-
-.status-completed {
-  background: #2ecc71;
 }
 
 // TAG COLORS

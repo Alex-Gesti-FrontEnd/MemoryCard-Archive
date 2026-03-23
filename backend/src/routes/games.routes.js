@@ -103,36 +103,9 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-router.get('/igdb/game/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const data = await getGameById(id);
-
-    res.json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: 'IGDB game detail error',
-      error: error.message,
-    });
-  }
-});
-
 router.post('/', authMiddleware, async (req, res) => {
-  const {
-    name,
-    platform,
-    region,
-    genre,
-    releaseDate,
-    image,
-    status,
-    format,
-    game_url,
-    game_type,
-    igdb_id,
-  } = req.body;
+  const { name, platform, region, genre, releaseDate, image, status, format, game_url, game_type } =
+    req.body;
 
   try {
     const connection = await getConnection();
@@ -141,8 +114,8 @@ router.post('/', authMiddleware, async (req, res) => {
     const [result] = await connection.query(
       `
       INSERT INTO games 
-      (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type, igdb_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -156,7 +129,6 @@ router.post('/', authMiddleware, async (req, res) => {
         format || 'physical',
         game_url || null,
         game_type ?? 0,
-        igdb_id ?? null,
       ],
     );
 
@@ -171,19 +143,8 @@ router.post('/', authMiddleware, async (req, res) => {
 
 router.put('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const {
-    name,
-    platform,
-    region,
-    genre,
-    releaseDate,
-    image,
-    status,
-    format,
-    game_url,
-    game_type,
-    igdb_id,
-  } = req.body;
+  const { name, platform, region, genre, releaseDate, image, status, format, game_url, game_type } =
+    req.body;
 
   try {
     const connection = await getConnection();
@@ -192,7 +153,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     await connection.query(
       `
       UPDATE games 
-      SET name=?, platform=?, region=?, genre=?, releaseDate=?, image=?, status=?, format=?, game_url=?, game_type=?, igdb_id=?
+      SET name=?, platform=?, region=?, genre=?, releaseDate=?, image=?, status=?, format=?, game_url=?, game_type=?
       WHERE id=? AND user_id=?
       `,
       [
@@ -206,7 +167,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
         format,
         game_url,
         game_type,
-        igdb_id,
         id,
         userId,
       ],

@@ -27,16 +27,13 @@
       <span class="game-tag" [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()">
         {{ getGameTypeLabel(game.game_type) }}
       </span>
-      <span class="status-tag" [ngClass]="'status-' + game.status">
-        {{ game.status }}
-      </span>
       <div class="delete-btn" (click)="openDeleteModal(game)">✕</div>
       <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
 
       <div class="game-info">
         <h6>{{ game.name }}</h6>
         <p>{{ game.platform }} • {{ game.releaseDate | date: 'yyyy' : '----' }}</p>
-        <p>{{ game.region }} • {{ game.format | titlecase }}</p>
+        <p>{{ game.region }} • {{ game.format | titlecase }} • {{ game.status }}</p>
       </div>
     </div>
   </div>

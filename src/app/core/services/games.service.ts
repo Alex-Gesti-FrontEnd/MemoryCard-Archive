@@ -49,8 +49,4 @@ export class GamesService {
       params: { name, page },
     });
   }
-
-  getGameDetails(igdbId: number) {
-    return this.http.get<any>(`${this.apiUrl}/games/igdb/game/${igdbId}`);
-  }
 }
