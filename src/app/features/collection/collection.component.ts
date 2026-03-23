@@ -75,7 +75,7 @@ export class CollectionComponent implements OnInit {
     }
   }
 
-  openZoom(game: GameModel, event: MouseEvent) {
+  async openZoom(game: GameModel, event: MouseEvent) {
     if (this.zoomVisible()) return;
 
     const card = event.currentTarget as HTMLElement;
