@@ -193,6 +193,9 @@ router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const connection = await getConnection();
     const userId = req.user.id;
+    const formattedReleaseDate = releaseDate
+      ? new Date(releaseDate).toISOString().split('T')[0]
+      : null;
 
     await connection.query(
       `
@@ -220,7 +223,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
         platform,
         region,
         genre,
-        releaseDate,
+        formattedReleaseDate,
         image,
         status,
         format,

@@ -143,6 +143,28 @@ export class CollectionComponent implements OnInit {
     }
   }
 
+  getCurrentIndex(): number {
+    const game = this.zoomGame();
+    if (!game) return -1;
+    return this.games().findIndex((g) => g.id === game.id);
+  }
+
+  showPreviousGame() {
+    const index = this.getCurrentIndex();
+    if (index > 0) {
+      this.zoomGame.set(this.filteredGames()[index - 1]);
+      this.summaryExpanded.set(false);
+    }
+  }
+
+  showNextGame() {
+    const index = this.getCurrentIndex();
+    if (index < this.filteredGames().length - 1) {
+      this.zoomGame.set(this.filteredGames()[index + 1]);
+      this.summaryExpanded.set(false);
+    }
+  }
+
   getZoomBackground(): string {
     const game = this.zoomGame();
     if (!game) return '';
@@ -162,6 +184,8 @@ export class CollectionComponent implements OnInit {
     game.status = next[game.status || 'backlog'] as 'backlog' | 'playing' | 'completed';
 
     this.games.update((g) => [...g]);
+
+    this.gamesService.updateGame(game.id!, game);
   }
 
   getRegionColor(region: string | undefined): string {
@@ -198,7 +222,11 @@ export class CollectionComponent implements OnInit {
     this.summaryExpanded.update((v) => !v);
   }
 
-  openDeleteModal(game: GameModel) {
+  openDeleteModal(game: GameModel, event: MouseEvent) {
+    event.stopPropagation();
+
+    if (this.zoomVisible()) return;
+
     this.gameToDelete.set(game);
     this.showDeleteModal.set(true);
   }

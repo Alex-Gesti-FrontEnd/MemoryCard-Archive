@@ -30,7 +30,7 @@
       <span class="status-tag" [ngClass]="'status-' + game.status">
         {{ game.status }}
       </span>
-      <div class="delete-btn" (click)="openDeleteModal(game)">✕</div>
+      <div class="delete-btn" (click)="openDeleteModal(game, $event)">✕</div>
       <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
 
       <div class="game-info">
@@ -96,6 +96,14 @@
         </span>
       </div>
       <div class="close-btn" (click)="closeZoom()">✕</div>
+    </div>
+    <div class="zoom-nav prev" *ngIf="getCurrentIndex() > 0" (click)="showPreviousGame()"><</div>
+    <div
+      class="zoom-nav next"
+      *ngIf="getCurrentIndex() < filteredGames().length - 1"
+      (click)="showNextGame()"
+    >
+      >
     </div>
   </div>
 
