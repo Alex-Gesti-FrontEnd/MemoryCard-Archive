@@ -86,9 +86,9 @@
   position: fixed;
   overflow: visible;
   width: 80vw;
-  max-width: 700px;
+  max-width: 900px;
   height: 60vh;
-  max-height: 500px;
+  max-height: 700px;
   padding: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -107,7 +107,8 @@
   padding: 20px;
   color: white;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 20px;
   justify-content: flex-start;
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -142,15 +143,6 @@
   }
 }
 
-.zoom-tags {
-  display: flex;
-  z-index: 1;
-
-  .status-tag {
-    position: static;
-  }
-}
-
 .zoom-info {
   z-index: 2;
   text-align: left;
@@ -160,12 +152,12 @@
   justify-content: center;
 
   h3 {
-    margin: 0 0 5px 0;
+    margin: 0 0 10px 0;
     font-size: 1.4rem;
   }
 
   p {
-    margin: 0 0 4px 0;
+    margin: 0 0 6px 0;
     font-size: 0.9rem;
     color: #ddd;
   }
@@ -279,6 +271,51 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
 }
 
+.zoom-carousel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .main-image {
+    width: 100%;
+    height: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.5s ease;
+  }
+}
+
+.info-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+
+  .tag {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  }
+
+  .companies {
+    background: rgba(52, 152, 219, 0.8);
+  }
+
+  .rating {
+    background: rgba(241, 196, 15, 0.85);
+    color: #000;
+  }
+}
+
 // DELETE
 
 .delete-btn {
@@ -375,17 +412,30 @@
 }
 
 //  STATUS TAGS
+.status-wrapper {
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-wrapper .status-tag {
+  position: static;
+  display: inline-block;
+  width: auto;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+}
 
 .status-tag {
   position: absolute;
   top: 36px;
   left: 8px;
-
   padding: 3px 8px;
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  font-size: 0.65rem;
 
   border-radius: 6px;
   color: #fff;

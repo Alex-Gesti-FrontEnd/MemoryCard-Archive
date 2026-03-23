@@ -57,7 +57,7 @@
         <h3>{{ zoomGame()?.name }}</h3>
         <div class="info-tags">
           <span class="tag platform"
-            >{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-mm-yyyy' }}</span
+            >{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-MM-yyyy' }}</span
           >
           <span class="tag" [ngStyle]="{ 'background-color': getRegionColor(zoomGame()?.region) }">
             {{ zoomGame()?.region }}
@@ -68,14 +68,21 @@
           >
           </span>
         </div>
+        <div class="info-extra mb-2">
+          <span *ngIf="companiesList()" class="tag companies">
+            {{ companiesList() }}
+          </span>
+          <span
+            *ngIf="zoomGame()?.rating !== undefined && zoomGame()?.rating !== null"
+            class="tag rating"
+          >
+            &#x2B50; {{ zoomGame()?.rating | number: '1.0-0' }}/100
+          </span>
+        </div>
         <p>{{ zoomGame()?.genre }}</p>
         <div *ngIf="zoomGame() as game">
           <p class="summary">
-            {{
-              summaryExpanded()
-                ? game.summary || 'No description available'
-                : getShortSummary(game.summary)
-            }}
+            {{ getSummaryText(game.summary) }}
           </p>
           <button
             *ngIf="game.summary && game.summary.length > 300"
@@ -85,15 +92,22 @@
             {{ summaryExpanded() ? 'See less' : 'See more' }}
           </button>
         </div>
+        <div class="status-wrapper mb-2">
+          <span
+            class="status-tag"
+            [ngClass]="'status-' + zoomGame()?.status"
+            (click)="cycleStatus(zoomGame())"
+          >
+            {{ zoomGame()?.status }}
+          </span>
+        </div>
       </div>
-      <div class="zoom-tags mb-2">
-        <span
-          class="status-tag"
-          [ngClass]="'status-' + zoomGame()?.status"
-          (click)="cycleStatus(zoomGame())"
-        >
-          {{ zoomGame()?.status }}
-        </span>
+      <div class="zoom-carousel" *ngIf="carouselImages().length">
+        <img
+          class="main-image"
+          [src]="carouselImages()[currentScreenshotIndex()]"
+          alt="Game screenshot"
+        />
       </div>
       <div class="close-btn" (click)="closeZoom()">✕</div>
     </div>

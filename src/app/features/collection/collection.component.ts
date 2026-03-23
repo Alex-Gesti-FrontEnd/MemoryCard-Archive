@@ -33,9 +33,26 @@ export class CollectionComponent implements OnInit {
 
   summaryExpanded = signal(false);
 
+  currentScreenshotIndex = signal(0);
+  carouselImages = signal<string[]>([]);
+  carouselInterval: any;
+
   filteredGames = computed(() => {
     if (this.statusFilter() === 'all') return this.games();
     return this.games().filter((g) => g.status === this.statusFilter());
+  });
+
+  companiesList = computed(() => {
+    const game = this.zoomGame();
+    if (!game || !game.companies) return '';
+
+    const names = game.companies
+      .map((c: any) => c.company?.name)
+      .filter((n: string | undefined): n is string => !!n);
+
+    const uniqueNames = Array.from(new Set(names));
+
+    return uniqueNames.join(', ');
   });
 
   getGameTypeLabel(type: number | undefined): string {
@@ -63,6 +80,10 @@ export class CollectionComponent implements OnInit {
     }
 
     this.loadCollection();
+  }
+
+  ngOnDestroy(): void {
+    this.stopScreenshotCarousel();
   }
 
   async loadCollection() {
@@ -97,6 +118,7 @@ export class CollectionComponent implements OnInit {
     this.zoomGame.set(game);
     this.zoomVisible.set(true);
     this.zoomContentVisible.set(false);
+    this.startScreenshotCarousel(game);
 
     setTimeout(() => {
       this.zoomStyle.update((s) => ({
@@ -104,9 +126,9 @@ export class CollectionComponent implements OnInit {
         top: '50%',
         left: '50%',
         width: '80vw',
-        maxWidth: '700px',
+        maxWidth: '900px',
         height: '60vh',
-        maxHeight: '500px',
+        maxHeight: '700px',
         transform: 'translate(-50%, -50%)',
       }));
 
@@ -119,6 +141,7 @@ export class CollectionComponent implements OnInit {
     if (!game) return;
 
     this.zoomContentVisible.set(false);
+    this.stopScreenshotCarousel();
 
     const card = document.querySelector(`.game-card[data-id="${game.id}"]`) as HTMLElement | null;
 
@@ -152,7 +175,9 @@ export class CollectionComponent implements OnInit {
   showPreviousGame() {
     const index = this.getCurrentIndex();
     if (index > 0) {
-      this.zoomGame.set(this.filteredGames()[index - 1]);
+      const newGame = this.filteredGames()[index - 1];
+      this.zoomGame.set(newGame);
+      this.startScreenshotCarousel(newGame);
       this.summaryExpanded.set(false);
     }
   }
@@ -160,7 +185,9 @@ export class CollectionComponent implements OnInit {
   showNextGame() {
     const index = this.getCurrentIndex();
     if (index < this.filteredGames().length - 1) {
-      this.zoomGame.set(this.filteredGames()[index + 1]);
+      const newGame = this.filteredGames()[index + 1];
+      this.zoomGame.set(newGame);
+      this.startScreenshotCarousel(newGame);
       this.summaryExpanded.set(false);
     }
   }
@@ -206,13 +233,28 @@ export class CollectionComponent implements OnInit {
     return map[format?.toLowerCase() ?? ''];
   }
 
+  getSummaryText(text: string | null | undefined): string {
+    if (!text) return 'No description available';
+
+    if (this.summaryExpanded()) {
+      if (text.length <= 500) return text;
+
+      const slice = text.slice(0, 500);
+      const lastDot = slice.lastIndexOf('.');
+
+      return lastDot !== -1 ? slice.slice(0, lastDot + 1) : slice + '...';
+    } else {
+      return this.getShortSummary(text);
+    }
+  }
+
   getShortSummary(text: string | null | undefined): string {
     if (!text) return 'No description available';
 
     const short = text.split('.').slice(0, 3).join('.');
 
-    if (short.length > 300) {
-      return short.slice(0, 300) + '...';
+    if (short.length > 100) {
+      return short.slice(0, 100) + '...';
     }
 
     return short + '.';
@@ -220,6 +262,43 @@ export class CollectionComponent implements OnInit {
 
   toggleSummary() {
     this.summaryExpanded.update((v) => !v);
+  }
+
+  startScreenshotCarousel(game: GameModel) {
+    const fixUrl = (url: any) => {
+      url = url.replace('t_thumb', 't_1080p');
+
+      if (url.startsWith('//')) return 'https:' + url;
+      if (url.startsWith('/')) return 'https://tu-backend.com' + url;
+      return url;
+    };
+
+    const screenshots = Array.isArray(game.screenshots) ? game.screenshots : [];
+    const artworks = Array.isArray(game.artworks) ? game.artworks : [];
+
+    const combined = [
+      ...screenshots.map((s: any) => fixUrl(s.url)).filter(Boolean),
+      ...artworks.map((a: any) => fixUrl(a.url)).filter(Boolean),
+    ];
+
+    this.carouselImages.set(combined);
+
+    if (!combined.length) return;
+
+    this.currentScreenshotIndex.set(0);
+
+    if (this.carouselInterval) clearInterval(this.carouselInterval);
+
+    this.carouselInterval = setInterval(() => {
+      this.currentScreenshotIndex.update((i) => (i + 1) % combined.length);
+    }, 3000);
+  }
+
+  stopScreenshotCarousel() {
+    if (this.carouselInterval) {
+      clearInterval(this.carouselInterval);
+      this.carouselInterval = null;
+    }
   }
 
   openDeleteModal(game: GameModel, event: MouseEvent) {
