@@ -188,31 +188,6 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
 }
 
-.zoom-summary {
-  margin-top: 10px;
-  font-size: 0.85rem;
-  color: #ddd;
-  max-height: 4.5em; // aprox 3 líneas
-  overflow: hidden;
-  line-height: 1.5em;
-  transition: max-height 0.3s ease;
-
-  p {
-    margin: 0;
-  }
-
-  .toggle-summary {
-    color: #3498db;
-    cursor: pointer;
-    font-weight: bold;
-    margin-left: 5px;
-  }
-}
-
-.show-full-summary {
-  max-height: none;
-}
-
 // DELETE
 
 .delete-btn {

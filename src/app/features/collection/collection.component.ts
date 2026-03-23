@@ -7,14 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { GameModel } from '../../core/models/game.model';
 import { firstValueFrom } from 'rxjs';
 
-interface ZoomGameModel extends GameModel {
-  summary?: string;
-  involved_companies?: { company: { name: string } }[];
-  rating?: number;
-  screenshots?: { url: string }[];
-  artworks?: { url: string }[];
-}
-
 @Component({
   selector: 'app-collection',
   standalone: true,
@@ -35,11 +27,10 @@ export class CollectionComponent implements OnInit {
 
   statusFilter = signal<string>('all');
 
-  zoomGame = signal<ZoomGameModel | null>(null);
+  zoomGame = signal<GameModel | null>(null);
   zoomStyle = signal<any>({});
   zoomVisible = signal(false);
   zoomContentVisible = signal(false);
-  showFullSummary = signal(false);
 
   gameDetailsCache = new Map<number, any>();
 
@@ -109,27 +100,27 @@ export class CollectionComponent implements OnInit {
     this.zoomContentVisible.set(false);
 
     if (game.igdb_id) {
-      let extra: any;
       if (this.gameDetailsCache.has(game.igdb_id)) {
-        extra = this.gameDetailsCache.get(game.igdb_id);
+        const extra = this.gameDetailsCache.get(game.igdb_id);
+
+        this.zoomGame.update((g) => ({
+          ...g!,
+          ...extra,
+        }));
       } else {
         try {
-          extra = await firstValueFrom(this.gamesService.getGameDetails(game.igdb_id));
+          const extra = await firstValueFrom(this.gamesService.getGameDetails(game.igdb_id));
+
           this.gameDetailsCache.set(game.igdb_id, extra);
+
+          this.zoomGame.update((g) => ({
+            ...g!,
+            ...extra,
+          }));
         } catch (err) {
           console.error(err);
-          extra = {};
         }
       }
-
-      this.zoomGame.update((g) => ({
-        ...g!,
-        summary: extra.summary || 'No description available.',
-        screenshots: extra.screenshots || [],
-        artworks: extra.artworks || [],
-        involved_companies: extra.involved_companies || [],
-        rating: extra.rating,
-      }));
     }
 
     setTimeout(() => {
@@ -194,19 +185,6 @@ export class CollectionComponent implements OnInit {
     game.status = next[game.status || 'backlog'] as 'backlog' | 'playing' | 'completed';
 
     this.games.update((g) => [...g]);
-  }
-
-  toggleFullSummary() {
-    this.showFullSummary.update((v) => !v);
-  }
-
-  shortSummary(text?: string): string {
-    if (!text) return 'No description available.';
-
-    if (this.showFullSummary()) return text;
-
-    const short = text.split('.').slice(0, 2).join('.') + '.';
-    return short.length > 200 ? short.slice(0, 200) + '...' : short;
   }
 
   openDeleteModal(game: GameModel) {

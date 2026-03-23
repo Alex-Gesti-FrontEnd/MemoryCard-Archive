@@ -58,14 +58,6 @@
         <p>{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-MM-yyyy' }}</p>
         <p>{{ zoomGame()?.region }} • {{ zoomGame()?.format }}</p>
         <p>{{ zoomGame()?.genre }}</p>
-        <div class="zoom-summary">
-          <p>
-            {{ shortSummary(zoomGame()?.summary) }}
-            <span *ngIf="zoomGame()?.summary" (click)="toggleFullSummary()" class="toggle-summary">
-              {{ showFullSummary() ? 'see less' : 'see more' }}
-            </span>
-          </p>
-        </div>
       </div>
       <div class="zoom-tags mb-2">
         <span
