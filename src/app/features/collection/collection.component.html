@@ -55,12 +55,36 @@
       </div>
       <div class="zoom-info">
         <h3>{{ zoomGame()?.name }}</h3>
-        <p>{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-MM-yyyy' }}</p>
-        <p>{{ zoomGame()?.region }} • {{ zoomGame()?.format }}</p>
+        <div class="info-tags">
+          <span class="tag platform"
+            >{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-mm-yyyy' }}</span
+          >
+          <span class="tag" [ngStyle]="{ 'background-color': getRegionColor(zoomGame()?.region) }">
+            {{ zoomGame()?.region }}
+          </span>
+          <span
+            class="tag format"
+            [innerHTML]="getFormatIcon(zoomGame()?.format) + ' ' + (zoomGame()?.format | titlecase)"
+          >
+          </span>
+        </div>
         <p>{{ zoomGame()?.genre }}</p>
-        <p class="summary">
-          {{ getShortSummary(zoomGame()?.summary ?? '') }}
-        </p>
+        <div *ngIf="zoomGame() as game">
+          <p class="summary">
+            {{
+              summaryExpanded()
+                ? game.summary || 'No description available'
+                : getShortSummary(game.summary)
+            }}
+          </p>
+          <button
+            *ngIf="game.summary && game.summary.length > 300"
+            class="btn btn-link p-0 mt-0"
+            (click)="toggleSummary()"
+          >
+            {{ summaryExpanded() ? 'See less' : 'See more' }}
+          </button>
+        </div>
       </div>
       <div class="zoom-tags mb-2">
         <span

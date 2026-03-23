@@ -31,6 +31,8 @@ export class CollectionComponent implements OnInit {
   zoomVisible = signal(false);
   zoomContentVisible = signal(false);
 
+  summaryExpanded = signal(false);
+
   filteredGames = computed(() => {
     if (this.statusFilter() === 'all') return this.games();
     return this.games().filter((g) => g.status === this.statusFilter());
@@ -101,8 +103,10 @@ export class CollectionComponent implements OnInit {
         ...s,
         top: '50%',
         left: '50%',
-        width: '500px',
-        height: '350px',
+        width: '80vw',
+        maxWidth: '700px',
+        height: '60vh',
+        maxHeight: '500px',
         transform: 'translate(-50%, -50%)',
       }));
 
@@ -160,7 +164,25 @@ export class CollectionComponent implements OnInit {
     this.games.update((g) => [...g]);
   }
 
-  getShortSummary(text: string | undefined): string {
+  getRegionColor(region: string | undefined): string {
+    const map: Record<string, string> = {
+      PAL: '#3498db',
+      'NTSC-U': '#e74c3c',
+      'NTSC-J': '#f1c40f',
+      'Region Free': '#2ecc71',
+    };
+    return map[region ?? ''];
+  }
+
+  getFormatIcon(format: string | undefined): string {
+    const map: Record<string, string> = {
+      physical: '&#x1F4BF;',
+      digital: '&#x1F5A5;',
+    };
+    return map[format?.toLowerCase() ?? ''];
+  }
+
+  getShortSummary(text: string | null | undefined): string {
     if (!text) return 'No description available';
 
     const short = text.split('.').slice(0, 3).join('.');
@@ -170,6 +192,10 @@ export class CollectionComponent implements OnInit {
     }
 
     return short + '.';
+  }
+
+  toggleSummary() {
+    this.summaryExpanded.update((v) => !v);
   }
 
   openDeleteModal(game: GameModel) {

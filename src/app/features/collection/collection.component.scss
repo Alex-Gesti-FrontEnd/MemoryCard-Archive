@@ -85,8 +85,13 @@
 .zoom-modal {
   position: fixed;
   overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  width: 80vw;
+  max-width: 700px;
+  height: 60vh;
+  max-height: 500px;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -107,6 +112,7 @@
   justify-content: flex-start;
   opacity: 0;
   transition: opacity 0.25s ease;
+  z-index: 2;
 }
 
 .zoom-content.visible {
@@ -124,6 +130,15 @@
   background-size: cover;
   background-position: center;
   background-blend-mode: overlay;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 1;
+  }
 }
 
 .zoom-tags {
@@ -181,10 +196,30 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-.zoom-info p,
-.zoom-tags .game-tag,
-.zoom-tags .status-tag {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
+.info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+
+  .tag {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  }
+
+  .platform {
+    background: rgba(52, 73, 94, 0.8);
+  }
+
+  .format {
+    background: rgba(44, 62, 80, 0.8);
+  }
 }
 
 .summary {
@@ -193,11 +228,23 @@
   color: #ccc;
   line-height: 1.3;
 
-  display: -webkit-box;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.zoom-info .btn {
+  font-size: 0.8rem;
+  color: #ccc;
+  line-height: 1.3;
 
   overflow: hidden;
+}
+
+.zoom-info p,
+.zoom-tags .game-tag,
+.zoom-tags .status-tag,
+.summary,
+.zoom-info .btn {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
 }
 
 // DELETE
