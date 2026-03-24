@@ -2,14 +2,34 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>My Collection</h2>
     <div class="collection-stats d-flex gap-3 align-items-center">
-      <div class="stat-tag total"><span class="label">Total:</span> {{ games().length }}</div>
-      <div class="stat-tag backlog">
-        <span class="label">To Play:</span> {{ games().filter(g => g.status === 'backlog').length }}
+      <div
+        class="stat-tag total"
+        [class.active]="statusFilter() === 'all'"
+        (click)="changeStatusFilter('all')"
+      >
+        <span class="label">Total:</span> {{ games().length }}
       </div>
-      <div class="stat-tag playing">
-        <span class="label">Playing:</span> {{ games().filter(g => g.status === 'playing').length }}
+      <div
+        class="stat-tag backlog"
+        [class.active]="statusFilter() === 'backlog'"
+        (click)="statusFilter.set('backlog')"
+      >
+        <span class="label">To Play:</span>
+        {{ games().filter(g => g.status === 'backlog').length }}
       </div>
-      <div class="stat-tag completed">
+      <div
+        class="stat-tag playing"
+        [class.active]="statusFilter() === 'playing'"
+        (click)="statusFilter.set('playing')"
+      >
+        <span class="label">Playing:</span>
+        {{ games().filter(g => g.status === 'playing').length }}
+      </div>
+      <div
+        class="stat-tag completed"
+        [class.active]="statusFilter() === 'completed'"
+        (click)="statusFilter.set('completed')"
+      >
         <span class="label">Completed:</span>
         {{ games().filter(g => g.status === 'completed').length }}
       </div>
@@ -24,60 +44,64 @@
     (ngModelChange)="searchTerm.set($event)"
   />
 
-  <div class="d-flex gap-2 mb-3">
-    <!-- Status filter -->
-    <select
-      class="form-select form-select-sm"
-      [ngModel]="statusFilter()"
-      (ngModelChange)="statusFilter.set($event)"
+  <div class="group-tags d-flex gap-2 mb-3">
+    <span
+      class="game-tag big tag-all"
+      [class.active]="groupMode() === 'none'"
+      (click)="setGroupMode('none')"
+      >All</span
     >
-      <option value="all">All</option>
-      <option value="backlog">To Play</option>
-      <option value="playing">Playing</option>
-      <option value="completed">Completed</option>
-    </select>
-
-    <select
-      class="form-select form-select-sm"
-      [ngModel]="groupMode()"
-      (ngModelChange)="groupMode.set($event)"
+    <span class="game-tag big tag-fav" [class.active]="favoritesOnly()" (click)="toggleFavorites()"
+      >&#x2605; Favorites</span
     >
-      <option value="none">No Grouping</option>
-      <option value="favorites">Favorites</option>
-      <option value="platform">Platform</option>
-      <option value="company">Company</option>
-      <option value="year">Release Decade</option>
-    </select>
+    <span
+      class="game-tag big tag-plat"
+      [class.active]="groupMode() === 'platform'"
+      (click)="setGroupMode('platform')"
+      >&#x1F3AE; Platform</span
+    >
+    <span
+      class="game-tag big tag-com"
+      [class.active]="groupMode() === 'company'"
+      (click)="setGroupMode('company')"
+      >&#x1F3E2; Company</span
+    >
+    <span
+      class="game-tag big tag-decade"
+      [class.active]="groupMode() === 'year'"
+      (click)="setGroupMode('year')"
+      >&#x1F4C5; Decade</span
+    >
   </div>
 
-  <div *ngIf="groupedGames() as groups">
-    <div *ngFor="let group of groups | keyvalue">
-      <h5 class="mt-4">{{ group.key }}</h5>
-      <div class="games-grid">
-        <div class="game-card" *ngFor="let game of group.value" (click)="openZoom(game, $event)">
-          <span
-            class="game-tag"
-            [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()"
-          >
-            {{ getGameTypeLabel(game.game_type) }}
-          </span>
-          <span class="status-tag" [ngClass]="'status-' + game.status">
-            {{ getStatusLabel(game.status) }}
-          </span>
-          <div class="delete-btn" (click)="openDeleteModal(game, $event)">✕</div>
-          <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
+  <div *ngIf="isInsideGroup()" class="mb-3">
+    <button class="btn btn-sm btn-black" (click)="closeFolder()">< Back</button>
+  </div>
 
-          <div class="game-info">
-            <h6>{{ game.name }}</h6>
-            <p>{{ game.platform }} • {{ game.releaseDate | date: 'yyyy' : '----' }}</p>
-            <p>{{ game.region }} • {{ game.format | titlecase }}</p>
-          </div>
+  <div *ngIf="groupMode() !== 'none' && !isInsideGroup() && !favoritesOnly()">
+    <div class="games-grid" [class.animating]="isGridAnimating()">
+      <div
+        class="game-card folder-card"
+        *ngFor="let group of groupedGames() | keyvalue"
+        (click)="openFolder(group.key, $event)"
+      >
+        <div class="folder-icon">
+          <span [innerHTML]="getGroupIcon(group.key)"></span>
+        </div>
+
+        <div class="game-info visible">
+          <h6>{{ group.key }}</h6>
+          <p>{{ group.value.length }} games</p>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="games-grid mt-4" *ngIf="!groupedGames()">
+  <div
+    class="games-grid mt-4"
+    [class.animating]="isGridAnimating()"
+    *ngIf="groupMode() === 'none' || isInsideGroup()"
+  >
     <div
       class="game-card"
       *ngFor="let game of filteredGames()"
@@ -100,6 +124,9 @@
       </div>
     </div>
   </div>
+
+  <!-- FOLDER ZOOM ANIMATION -->
+  <div *ngIf="isFolderZooming()" class="folder-zoom-overlay" [ngStyle]="folderZoomStyle()"></div>
 
   <!-- ZOOM MODAL -->
   <div *ngIf="zoomVisible()" class="zoom-modal" [ngStyle]="zoomStyle()">

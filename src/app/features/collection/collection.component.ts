@@ -38,12 +38,20 @@ export class CollectionComponent implements OnInit {
 
   searchTerm = signal('');
 
-  groupMode = signal<'none' | 'platform' | 'company' | 'year' | 'favorites'>('none');
+  groupMode = signal<'none' | 'platform' | 'company' | 'year'>('none');
+  favoritesOnly = signal(false);
 
   zoomGame = signal<GameModel | null>(null);
   zoomStyle = signal<any>({});
   zoomVisible = signal(false);
   zoomContentVisible = signal(false);
+
+  selectedGroup = signal<string | null>(null);
+
+  folderZoomStyle = signal<any>(null);
+  isFolderZooming = signal(false);
+
+  isGridAnimating = signal(false);
 
   summaryExpanded = signal(false);
 
@@ -59,6 +67,8 @@ export class CollectionComponent implements OnInit {
 
   backlogCount = computed(() => this.games().filter((g) => g.status === 'backlog').length);
 
+  isInsideGroup = computed(() => this.selectedGroup() !== null);
+
   filteredGames = computed(() => {
     let games = this.games();
 
@@ -70,18 +80,43 @@ export class CollectionComponent implements OnInit {
       games = games.filter((g) => g.name.toLowerCase().includes(this.searchTerm().toLowerCase()));
     }
 
+    if (this.favoritesOnly()) {
+      games = games.filter((g) => g.favorite);
+    }
+
+    if (this.selectedGroup()) {
+      const group = this.selectedGroup();
+      const mode = this.groupMode();
+
+      if (mode === 'platform') {
+        games = games.filter((g) => (g.platform || 'Unknown') === group);
+      }
+
+      if (mode === 'company') {
+        games = games.filter((g) => {
+          const names = g.companies?.map((c: any) => c.company?.name) || [];
+          return names[0] === group;
+        });
+      }
+
+      if (mode === 'year') {
+        games = games.filter((g) => {
+          if (!g.releaseDate) return group === 'Unknown';
+          const year = new Date(g.releaseDate).getFullYear();
+          const base = Math.floor(year / 10) * 10;
+          return `${base}s` === group;
+        });
+      }
+    }
+
     return games;
   });
 
-  groupedGames = computed(() => {
+  groupedGames = computed<Record<string, GameModel[]> | null>(() => {
     const mode = this.groupMode();
     const games = this.filteredGames();
 
     if (mode === 'none') return null;
-
-    if (mode === 'favorites') {
-      return { Favorites: games.filter((g) => g.favorite) };
-    }
 
     if (mode === 'platform') {
       return groupBy(games, (g) => g.platform || 'Unknown');
@@ -262,6 +297,90 @@ export class CollectionComponent implements OnInit {
     }
   }
 
+  toggleFavorites() {
+    const newValue = !this.favoritesOnly();
+
+    this.triggerGridAnimation();
+
+    this.favoritesOnly.set(newValue);
+
+    if (newValue) {
+      this.groupMode.set('none');
+      this.selectedGroup.set(null);
+    }
+  }
+
+  setGroupMode(mode: 'none' | 'platform' | 'company' | 'year') {
+    this.triggerGridAnimation();
+    this.groupMode.set(mode);
+    this.selectedGroup.set(null);
+    this.favoritesOnly.set(false);
+  }
+
+  getGroupIcon(key: string): string {
+    const mode = this.groupMode();
+
+    if (mode === 'platform') return '&#x1F3AE;';
+    if (mode === 'company') return '&#x1F3E2;';
+    if (mode === 'year') return `<strong>${key}</strong>`;
+
+    return '&#x1F4C1;';
+  }
+
+  openFolder(key: string, event: MouseEvent) {
+    const card = event.currentTarget as HTMLElement;
+    const rect = card.getBoundingClientRect();
+
+    this.folderZoomStyle.set({
+      position: 'fixed',
+      top: rect.top + 'px',
+      left: rect.left + 'px',
+      width: rect.width + 'px',
+      height: rect.height + 'px',
+      zIndex: 2000,
+      transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+    });
+
+    this.isFolderZooming.set(true);
+
+    setTimeout(() => {
+      this.folderZoomStyle.update((s: any) => ({
+        ...s,
+        top: '50%',
+        left: '50%',
+        width: '90vw',
+        height: '90vh',
+        transform: 'translate(-50%, -50%) scale(1.05)',
+      }));
+    }, 10);
+
+    setTimeout(() => {
+      this.selectedGroup.set(key);
+    }, 300);
+
+    setTimeout(() => {
+      this.isFolderZooming.set(false);
+      this.folderZoomStyle.set(null);
+    }, 450);
+  }
+
+  closeFolder() {
+    this.isFolderZooming.set(true);
+
+    setTimeout(() => {
+      this.selectedGroup.set(null);
+      this.isFolderZooming.set(false);
+    }, 200);
+  }
+
+  triggerGridAnimation() {
+    this.isGridAnimating.set(true);
+
+    setTimeout(() => {
+      this.isGridAnimating.set(false);
+    }, 300);
+  }
+
   getZoomBackground(): string {
     const game = this.zoomGame();
     if (!game) return '';
@@ -363,6 +482,11 @@ export class CollectionComponent implements OnInit {
 
     this.games.update((g) => [...g]);
     this.gamesService.updateGame(game.id!, game);
+  }
+
+  changeStatusFilter(value: string) {
+    this.triggerGridAnimation();
+    this.statusFilter.set(value);
   }
 
   getRegionColor(region: string | undefined): string {

@@ -11,7 +11,7 @@
     text-transform: uppercase;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     background-color: rgba(0, 0, 0, 0.5);
-    transition: transform 0.2s ease;
+    transition: transform 0.5s ease;
 
     &:hover {
       transform: scale(1.05);
@@ -29,6 +29,11 @@
     &.total {
       background-color: #9b59b6;
     }
+
+    &.active {
+      transform: scale(1.05);
+      border-style: dotted;
+    }
   }
 
   .label {
@@ -45,6 +50,13 @@
   grid-template-columns: repeat(auto-fit, minmax(100px, 180px));
   max-width: 1400px;
   margin: 0 auto;
+
+  transition: all 0.3s ease;
+
+  &.animating {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
 }
 
 .game-card {
@@ -56,6 +68,7 @@
   cursor: pointer;
 
   transition: transform 0.25s ease;
+  animation: fadeIn 0.3s ease;
 
   &:hover {
     transform: scale(1.05);
@@ -72,6 +85,30 @@
 
   &:hover .delete-btn {
     opacity: 1;
+  }
+}
+
+.game-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  box-shadow: 0 0 0px rgba(255, 255, 255, 0);
+  transition: 0.3s;
+}
+
+.game-card:hover::after {
+  box-shadow: 0 0 20px rgba(100, 150, 255, 0.4);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -118,6 +155,68 @@
     font-size: 0.7rem;
     padding: 2px 6px;
     color: white;
+  }
+}
+
+// GROUPING GRID
+.folder-zoom-overlay {
+  position: fixed;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 16px;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  backdrop-filter: blur(6px);
+
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.folder-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  transition: all 0.25s ease;
+
+  .folder-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+
+  .game-info.visible {
+    position: static;
+    transform: none;
+    opacity: 1;
+    background: none;
+    text-align: center;
+  }
+
+  &:hover {
+    transform: scale(1.1) rotate(-1deg);
+  }
+}
+
+.btn-back {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.05);
   }
 }
 
@@ -471,13 +570,19 @@
 
 .game-tag.big {
   position: static;
-  display: inline-block;
+  display: flex;
+  align-items: center;
   margin-bottom: 6px;
   font-size: 0.8rem;
 
   text-transform: uppercase;
   font-size: 0.65rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+
+  &.active {
+    transform: scale(1.05);
+    border-style: dotted;
+  }
 }
 
 //  STATUS TAGS
@@ -551,7 +656,8 @@
 
 // TAG COLORS
 
-.tag-game {
+.tag-game,
+.tag-all {
   background: rgba(46, 204, 113, 0.9);
 }
 
@@ -563,12 +669,13 @@
   background: rgba(0, 184, 148, 0.9);
 }
 
-.tag-bundle {
+.tag-bundle,
+.tag-fav {
   background: rgba(241, 196, 15, 0.9);
-  color: #000;
 }
 
-.tag-remake {
+.tag-remake,
+.tag-plat {
   background: rgba(231, 76, 60, 0.9);
 }
 
@@ -576,7 +683,8 @@
   background: rgba(230, 126, 34, 0.9);
 }
 
-.tag-port {
+.tag-port,
+.tag-decade {
   background: rgba(52, 152, 219, 0.9);
 }
 
