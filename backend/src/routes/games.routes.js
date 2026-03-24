@@ -127,6 +127,9 @@ router.post('/', authMiddleware, async (req, res) => {
     screenshots,
     artworks,
     companies,
+    startedAt,
+    completedAt,
+    favorite,
   } = req.body;
 
   try {
@@ -137,8 +140,8 @@ router.post('/', authMiddleware, async (req, res) => {
       `
       INSERT INTO games 
       (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type,
-       summary, rating, screenshots, artworks, companies)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       summary, rating, screenshots, artworks, companies, startedAt, completedAt, favorite)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -157,6 +160,9 @@ router.post('/', authMiddleware, async (req, res) => {
         JSON.stringify(screenshots || []),
         JSON.stringify(artworks || []),
         JSON.stringify(companies || []),
+        startedAt || null,
+        completedAt || null,
+        favorite ?? false,
       ],
     );
 
@@ -188,6 +194,9 @@ router.put('/:id', authMiddleware, async (req, res) => {
     screenshots,
     artworks,
     companies,
+    startedAt,
+    completedAt,
+    favorite,
   } = req.body;
 
   try {
@@ -215,7 +224,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
         rating=?,
         screenshots=?,
         artworks=?,
-        companies=?
+        companies=?,
+        startedAt=?,
+        completedAt=?,
+        favorite=?,
       WHERE id=? AND user_id=?
       `,
       [
@@ -234,6 +246,9 @@ router.put('/:id', authMiddleware, async (req, res) => {
         JSON.stringify(screenshots || []),
         JSON.stringify(artworks || []),
         JSON.stringify(companies || []),
+        startedAt,
+        completedAt,
+        favorite,
         id,
         userId,
       ],

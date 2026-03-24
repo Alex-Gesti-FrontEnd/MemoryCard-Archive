@@ -15,4 +15,7 @@ export interface GameModel {
   artworks?: string[];
   companies?: string[];
   summary?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  favorite?: boolean;
 }

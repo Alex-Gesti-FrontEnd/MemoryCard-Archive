@@ -17,6 +17,21 @@
     </div>
   </div>
 
+  <input
+    type="text"
+    class="form-control mb-3"
+    placeholder="Search game..."
+    [ngModel]="searchTerm()"
+    (ngModelChange)="searchTerm.set($event)"
+  />
+
+  <div class="stats-panel mb-3">
+    <div class="stat">Total: {{ games().length }}</div>
+    <div class="stat">Playing: {{ playingCount() }}</div>
+    <div class="stat">Completed: {{ completedCount() }}</div>
+    <div class="stat">Backlog: {{ backlogCount() }}</div>
+  </div>
+
   <div class="games-grid mt-4">
     <div
       class="game-card"
@@ -118,6 +133,13 @@
           >
             {{ getStatusLabel(zoomGame()?.status) }}
           </span>
+          <div class="mt-2 d-flex gap-2 flex-wrap">
+            <span class="tag"> Started: {{ zoomGame()?.startedAt || '—' }} </span>
+            <span class="tag"> Completed: {{ zoomGame()?.completedAt || '—' }} </span>
+            <span class="tag" (click)="toggleFavorite(zoomGame())" style="cursor: pointer">
+              {{ zoomGame()?.favorite ? '★ Favorite' : '☆ Add Favorite' }}
+            </span>
+          </div>
         </div>
       </div>
       <div class="zoom-carousel" *ngIf="carouselImages().length">

@@ -26,6 +26,8 @@ export class CollectionComponent implements OnInit {
 
   statusFilter = signal<string>('all');
 
+  searchTerm = signal('');
+
   zoomGame = signal<GameModel | null>(null);
   zoomStyle = signal<any>({});
   zoomVisible = signal(false);
@@ -39,9 +41,24 @@ export class CollectionComponent implements OnInit {
   carouselImages = signal<string[]>([]);
   carouselInterval: any;
 
+  playingCount = computed(() => this.games().filter((g) => g.status === 'playing').length);
+
+  completedCount = computed(() => this.games().filter((g) => g.status === 'completed').length);
+
+  backlogCount = computed(() => this.games().filter((g) => g.status === 'backlog').length);
+
   filteredGames = computed(() => {
-    if (this.statusFilter() === 'all') return this.games();
-    return this.games().filter((g) => g.status === this.statusFilter());
+    let games = this.games();
+
+    if (this.statusFilter() !== 'all') {
+      games = games.filter((g) => g.status === this.statusFilter());
+    }
+
+    if (this.searchTerm()) {
+      games = games.filter((g) => g.name.toLowerCase().includes(this.searchTerm().toLowerCase()));
+    }
+
+    return games;
   });
 
   companiesList = computed(() => {
@@ -352,6 +369,15 @@ export class CollectionComponent implements OnInit {
     if (!game?.game_url) return null;
 
     return `https://www.igdb.com/games/${game.game_url}`;
+  }
+
+  toggleFavorite(game: GameModel | null) {
+    if (!game) return;
+
+    game.favorite = !game.favorite;
+
+    this.games.update((g) => [...g]);
+    this.gamesService.updateGame(game.id!, game);
   }
 
   startScreenshotCarousel(game: GameModel) {
