@@ -50,6 +50,9 @@ export class CollectionComponent implements OnInit {
 
   folderZoomStyle = signal<any>(null);
   isFolderZooming = signal(false);
+  folderZoomVisible = signal(false);
+
+  zoomPreviewGames = signal<GameModel[]>([]);
 
   isGridAnimating = signal(false);
 
@@ -59,12 +62,13 @@ export class CollectionComponent implements OnInit {
 
   currentScreenshotIndex = signal(0);
   carouselImages = signal<string[]>([]);
+
   carouselInterval: any;
 
+  lastFolderRect: DOMRect | null = null;
+
   playingCount = computed(() => this.games().filter((g) => g.status === 'playing').length);
-
   completedCount = computed(() => this.games().filter((g) => g.status === 'completed').length);
-
   backlogCount = computed(() => this.games().filter((g) => g.status === 'backlog').length);
 
   isInsideGroup = computed(() => this.selectedGroup() !== null);
@@ -327,9 +331,11 @@ export class CollectionComponent implements OnInit {
     return '&#x1F4C1;';
   }
 
-  openFolder(key: string, event: MouseEvent) {
+  openFolder(key: string, games: GameModel[], event: MouseEvent) {
     const card = event.currentTarget as HTMLElement;
     const rect = card.getBoundingClientRect();
+    this.lastFolderRect = rect;
+    this.zoomPreviewGames.set(games.slice(0, 4));
 
     this.folderZoomStyle.set({
       position: 'fixed',
@@ -342,6 +348,7 @@ export class CollectionComponent implements OnInit {
     });
 
     this.isFolderZooming.set(true);
+    this.folderZoomVisible.set(true);
 
     setTimeout(() => {
       this.folderZoomStyle.update((s: any) => ({
@@ -356,21 +363,63 @@ export class CollectionComponent implements OnInit {
 
     setTimeout(() => {
       this.selectedGroup.set(key);
+    }, 400);
+
+    setTimeout(() => {
+      this.folderZoomVisible.set(false);
+    }, 450);
+
+    setTimeout(() => {
+      this.isFolderZooming.set(false);
+      this.folderZoomStyle.set(null);
+    }, 700);
+  }
+
+  closeFolder() {
+    if (!this.lastFolderRect) {
+      this.selectedGroup.set(null);
+      return;
+    }
+
+    this.folderZoomStyle.set({
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      width: '90vw',
+      height: '90vh',
+      transform: 'translate(-50%, -50%) scale(1.05)',
+      zIndex: 2000,
+      transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+    });
+
+    this.isFolderZooming.set(true);
+    this.folderZoomVisible.set(true);
+
+    setTimeout(() => {
+      this.selectedGroup.set(null);
+    }, 300);
+
+    setTimeout(() => {
+      const rect = this.lastFolderRect!;
+
+      this.folderZoomStyle.update((s: any) => ({
+        ...s,
+        top: rect.top + 'px',
+        left: rect.left + 'px',
+        width: rect.width + 'px',
+        height: rect.height + 'px',
+        transform: 'scale(1)',
+      }));
+    }, 20);
+
+    setTimeout(() => {
+      this.folderZoomVisible.set(false);
     }, 300);
 
     setTimeout(() => {
       this.isFolderZooming.set(false);
       this.folderZoomStyle.set(null);
-    }, 450);
-  }
-
-  closeFolder() {
-    this.isFolderZooming.set(true);
-
-    setTimeout(() => {
-      this.selectedGroup.set(null);
-      this.isFolderZooming.set(false);
-    }, 200);
+    }, 600);
   }
 
   triggerGridAnimation() {
@@ -485,6 +534,8 @@ export class CollectionComponent implements OnInit {
   }
 
   changeStatusFilter(value: string) {
+    if (this.statusFilter() === value) return;
+
     this.triggerGridAnimation();
     this.statusFilter.set(value);
   }

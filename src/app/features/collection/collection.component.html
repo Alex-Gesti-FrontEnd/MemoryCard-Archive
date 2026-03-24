@@ -12,7 +12,7 @@
       <div
         class="stat-tag backlog"
         [class.active]="statusFilter() === 'backlog'"
-        (click)="statusFilter.set('backlog')"
+        (click)="changeStatusFilter('backlog')"
       >
         <span class="label">To Play:</span>
         {{ games().filter(g => g.status === 'backlog').length }}
@@ -20,7 +20,7 @@
       <div
         class="stat-tag playing"
         [class.active]="statusFilter() === 'playing'"
-        (click)="statusFilter.set('playing')"
+        (click)="changeStatusFilter('playing')"
       >
         <span class="label">Playing:</span>
         {{ games().filter(g => g.status === 'playing').length }}
@@ -28,7 +28,7 @@
       <div
         class="stat-tag completed"
         [class.active]="statusFilter() === 'completed'"
-        (click)="statusFilter.set('completed')"
+        (click)="changeStatusFilter('completed')"
       >
         <span class="label">Completed:</span>
         {{ games().filter(g => g.status === 'completed').length }}
@@ -75,7 +75,7 @@
   </div>
 
   <div *ngIf="isInsideGroup()" class="mb-3">
-    <button class="btn btn-sm btn-black" (click)="closeFolder()">< Back</button>
+    <button class="btn-back" (click)="closeFolder()">< Back</button>
   </div>
 
   <div *ngIf="groupMode() !== 'none' && !isInsideGroup() && !favoritesOnly()">
@@ -83,10 +83,13 @@
       <div
         class="game-card folder-card"
         *ngFor="let group of groupedGames() | keyvalue"
-        (click)="openFolder(group.key, $event)"
+        (click)="openFolder(group.key, group.value, $event)"
       >
-        <div class="folder-icon">
-          <span [innerHTML]="getGroupIcon(group.key)"></span>
+        <div class="folder-preview" [ngClass]="'count-' + group.value.slice(0, 4).length">
+          <img
+            *ngFor="let game of group.value.slice(0, 4)"
+            [src]="game.image || 'assets/no-image.png'"
+          />
         </div>
 
         <div class="game-info visible">
@@ -126,7 +129,16 @@
   </div>
 
   <!-- FOLDER ZOOM ANIMATION -->
-  <div *ngIf="isFolderZooming()" class="folder-zoom-overlay" [ngStyle]="folderZoomStyle()"></div>
+  <div
+    *ngIf="isFolderZooming()"
+    class="folder-zoom-overlay"
+    [class.fade-out]="!folderZoomVisible()"
+    [ngStyle]="folderZoomStyle()"
+  >
+    <div class="folder-preview big" [ngClass]="'count-' + zoomPreviewGames().length">
+      <img *ngFor="let game of zoomPreviewGames()" [src]="game.image || 'assets/no-image.png'" />
+    </div>
+  </div>
 
   <!-- ZOOM MODAL -->
   <div *ngIf="zoomVisible()" class="zoom-modal" [ngStyle]="zoomStyle()">
