@@ -1,19 +1,18 @@
 <section class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>
-      My Collection <span class="text-muted fs-6">({{ games().length }} games)</span>
-    </h2>
-    <div>
-      <select
-        class="form-select form-select-sm"
-        [ngModel]="statusFilter()"
-        (ngModelChange)="statusFilter.set($event)"
-      >
-        <option value="all">All</option>
-        <option value="backlog">To Play</option>
-        <option value="playing">Playing</option>
-        <option value="completed">Completed</option>
-      </select>
+    <h2>My Collection</h2>
+    <div class="collection-stats d-flex gap-3 align-items-center">
+      <div class="stat-tag total"><span class="label">Total:</span> {{ games().length }}</div>
+      <div class="stat-tag backlog">
+        <span class="label">To Play:</span> {{ games().filter(g => g.status === 'backlog').length }}
+      </div>
+      <div class="stat-tag playing">
+        <span class="label">Playing:</span> {{ games().filter(g => g.status === 'playing').length }}
+      </div>
+      <div class="stat-tag completed">
+        <span class="label">Completed:</span>
+        {{ games().filter(g => g.status === 'completed').length }}
+      </div>
     </div>
   </div>
 
@@ -25,14 +24,60 @@
     (ngModelChange)="searchTerm.set($event)"
   />
 
-  <div class="stats-panel mb-3">
-    <div class="stat">Total: {{ games().length }}</div>
-    <div class="stat">Playing: {{ playingCount() }}</div>
-    <div class="stat">Completed: {{ completedCount() }}</div>
-    <div class="stat">Backlog: {{ backlogCount() }}</div>
+  <div class="d-flex gap-2 mb-3">
+    <!-- Status filter -->
+    <select
+      class="form-select form-select-sm"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event)"
+    >
+      <option value="all">All</option>
+      <option value="backlog">To Play</option>
+      <option value="playing">Playing</option>
+      <option value="completed">Completed</option>
+    </select>
+
+    <select
+      class="form-select form-select-sm"
+      [ngModel]="groupMode()"
+      (ngModelChange)="groupMode.set($event)"
+    >
+      <option value="none">No Grouping</option>
+      <option value="favorites">Favorites</option>
+      <option value="platform">Platform</option>
+      <option value="company">Company</option>
+      <option value="year">Release Decade</option>
+    </select>
   </div>
 
-  <div class="games-grid mt-4">
+  <div *ngIf="groupedGames() as groups">
+    <div *ngFor="let group of groups | keyvalue">
+      <h5 class="mt-4">{{ group.key }}</h5>
+      <div class="games-grid">
+        <div class="game-card" *ngFor="let game of group.value" (click)="openZoom(game, $event)">
+          <span
+            class="game-tag"
+            [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()"
+          >
+            {{ getGameTypeLabel(game.game_type) }}
+          </span>
+          <span class="status-tag" [ngClass]="'status-' + game.status">
+            {{ getStatusLabel(game.status) }}
+          </span>
+          <div class="delete-btn" (click)="openDeleteModal(game, $event)">✕</div>
+          <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
+
+          <div class="game-info">
+            <h6>{{ game.name }}</h6>
+            <p>{{ game.platform }} • {{ game.releaseDate | date: 'yyyy' : '----' }}</p>
+            <p>{{ game.region }} • {{ game.format | titlecase }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="games-grid mt-4" *ngIf="!groupedGames()">
     <div
       class="game-card"
       *ngFor="let game of filteredGames()"
@@ -125,7 +170,7 @@
         >
           View on IGDB
         </a>
-        <div class="status-wrapper mb-2">
+        <div class="status-wrapper mb-2 gap-2">
           <span
             class="status-tag"
             [ngClass]="'status-' + zoomGame()?.status"
@@ -133,13 +178,25 @@
           >
             {{ getStatusLabel(zoomGame()?.status) }}
           </span>
-          <div class="mt-2 d-flex gap-2 flex-wrap">
-            <span class="tag"> Started: {{ zoomGame()?.startedAt || '—' }} </span>
-            <span class="tag"> Completed: {{ zoomGame()?.completedAt || '—' }} </span>
-            <span class="tag" (click)="toggleFavorite(zoomGame())" style="cursor: pointer">
-              {{ zoomGame()?.favorite ? '★ Favorite' : '☆ Add Favorite' }}
-            </span>
-          </div>
+          <span
+            class="date-tag started"
+            *ngIf="zoomGame()?.status === 'playing' && zoomGame()?.startedAt"
+          >
+            {{ zoomGame()?.startedAt | date: 'dd-MM-yyyy' }}
+          </span>
+          <span
+            class="date-tag completed"
+            *ngIf="zoomGame()?.status === 'completed' && zoomGame()?.completedAt"
+          >
+            {{ zoomGame()?.completedAt | date: 'dd-MM-yyyy' }}
+          </span>
+          <span
+            class="favorite-icon rounded-circle"
+            [class.active]="zoomGame()?.favorite"
+            (click)="toggleFavorite(zoomGame()!, $event)"
+          >
+            &#9733;
+          </span>
         </div>
       </div>
       <div class="zoom-carousel" *ngIf="carouselImages().length">

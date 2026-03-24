@@ -205,6 +205,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const formattedReleaseDate = releaseDate
       ? new Date(releaseDate).toISOString().split('T')[0]
       : null;
+    const formattedStartedAt = startedAt ? new Date(startedAt).toISOString().split('T')[0] : null;
+    const formattedCompletedAt = completedAt
+      ? new Date(completedAt).toISOString().split('T')[0]
+      : null;
 
     await connection.query(
       `
@@ -227,7 +231,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
         companies=?,
         startedAt=?,
         completedAt=?,
-        favorite=?,
+        favorite=?
       WHERE id=? AND user_id=?
       `,
       [
@@ -246,8 +250,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
         JSON.stringify(screenshots || []),
         JSON.stringify(artworks || []),
         JSON.stringify(companies || []),
-        startedAt,
-        completedAt,
+        formattedStartedAt,
+        formattedCompletedAt,
         favorite,
         id,
         userId,

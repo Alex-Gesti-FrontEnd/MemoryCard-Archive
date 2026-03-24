@@ -6,6 +6,16 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GameModel } from '../../core/models/game.model';
 
+// Helper
+function groupBy<T>(array: T[], keyFn: (item: T) => string) {
+  return array.reduce((acc: any, item) => {
+    const key = keyFn(item);
+    acc[key] = acc[key] || [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+}
+
 @Component({
   selector: 'app-collection',
   standalone: true,
@@ -27,6 +37,8 @@ export class CollectionComponent implements OnInit {
   statusFilter = signal<string>('all');
 
   searchTerm = signal('');
+
+  groupMode = signal<'none' | 'platform' | 'company' | 'year' | 'favorites'>('none');
 
   zoomGame = signal<GameModel | null>(null);
   zoomStyle = signal<any>({});
@@ -59,6 +71,39 @@ export class CollectionComponent implements OnInit {
     }
 
     return games;
+  });
+
+  groupedGames = computed(() => {
+    const mode = this.groupMode();
+    const games = this.filteredGames();
+
+    if (mode === 'none') return null;
+
+    if (mode === 'favorites') {
+      return { Favorites: games.filter((g) => g.favorite) };
+    }
+
+    if (mode === 'platform') {
+      return groupBy(games, (g) => g.platform || 'Unknown');
+    }
+
+    if (mode === 'company') {
+      return groupBy(games, (g) => {
+        const names = g.companies?.map((c: any) => c.company?.name) || [];
+        return names[0] || 'Unknown';
+      });
+    }
+
+    if (mode === 'year') {
+      return groupBy(games, (g) => {
+        if (!g.releaseDate) return 'Unknown';
+        const year = new Date(g.releaseDate).getFullYear();
+        const base = Math.floor(year / 10) * 10;
+        return `${base}s`;
+      });
+    }
+
+    return null;
   });
 
   companiesList = computed(() => {
@@ -310,10 +355,13 @@ export class CollectionComponent implements OnInit {
       playing: 'completed',
       completed: 'backlog',
     };
-    game.status = next[game.status || 'backlog'] as 'backlog' | 'playing' | 'completed';
+    const newStatus = next[game.status || 'backlog'] as 'backlog' | 'playing' | 'completed';
+    game.status = newStatus;
+
+    if (newStatus === 'playing' && !game.startedAt) game.startedAt = new Date().toISOString();
+    if (newStatus === 'completed') game.completedAt = new Date().toISOString();
 
     this.games.update((g) => [...g]);
-
     this.gamesService.updateGame(game.id!, game);
   }
 
@@ -371,11 +419,9 @@ export class CollectionComponent implements OnInit {
     return `https://www.igdb.com/games/${game.game_url}`;
   }
 
-  toggleFavorite(game: GameModel | null) {
-    if (!game) return;
-
+  toggleFavorite(game: GameModel, event: MouseEvent) {
+    event.stopPropagation();
     game.favorite = !game.favorite;
-
     this.games.update((g) => [...g]);
     this.gamesService.updateGame(game.id!, game);
   }

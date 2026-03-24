@@ -1,13 +1,40 @@
-.stats-panel {
-  display: flex;
-  gap: 10px;
-
-  .stat {
-    background: #1e1e1e;
-    padding: 8px 12px;
+.collection-stats {
+  .stat-tag {
+    padding: 4px 10px;
     border-radius: 8px;
-    font-size: 0.8rem;
-    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    &.backlog {
+      background-color: #7f8c8d;
+    }
+    &.playing {
+      background-color: #3498db;
+    }
+    &.completed {
+      background-color: #2ecc71;
+    }
+    &.total {
+      background-color: #9b59b6;
+    }
+  }
+
+  .label {
+    font-weight: 400;
+    font-size: 0.65rem;
+    opacity: 0.8;
   }
 }
 
@@ -336,6 +363,28 @@
   }
 }
 
+.favorite-icon {
+  font-size: 1.2rem;
+  padding: 0.25vw 0.6vw;
+  color: #eaeaea;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  background: gray;
+  cursor: pointer;
+
+  transition:
+    transform 0.5s ease,
+    color 0.5s ease;
+
+  &.active {
+    color: gold;
+    transform: scale(1);
+  }
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
 // DELETE
 
 .delete-btn {
@@ -469,6 +518,12 @@
   letter-spacing: 0.3px;
 
   cursor: pointer;
+
+  transition: transform 0.5s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 }
 
 .status-tag.big {
@@ -535,4 +590,22 @@
 
 .tag-other {
   background: rgba(99, 110, 114, 0.9);
+}
+
+// DATE TAG
+.date-tag {
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.started {
+  background: #3498db;
+}
+
+.completed {
+  background: #2ecc71;
 }
