@@ -111,12 +111,19 @@
   gap: 20px;
   justify-content: flex-start;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
   z-index: 2;
 }
 
 .zoom-content.visible {
   opacity: 1;
+}
+
+.zoom-content.fade {
+  opacity: 0;
+  transform: scale(0.98);
 }
 
 .zoom-bg {
@@ -307,12 +314,12 @@
   }
 
   .companies {
-    background: rgba(52, 152, 219, 0.8);
+    background: rgba(99, 110, 114, 0.8);
   }
 
   .rating {
-    background: rgba(241, 196, 15, 0.85);
-    color: #000;
+    background: rgb(243, 170, 23);
+    color: #ffffff;
   }
 }
 

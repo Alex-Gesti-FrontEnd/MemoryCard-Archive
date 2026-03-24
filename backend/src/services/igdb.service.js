@@ -48,6 +48,7 @@ export async function getPopularGames(limit = 50, offset = 0) {
         involved_companies.company.name,
         rating,
         summary,
+        slug,
         game_type;
 
       where 
@@ -121,6 +122,7 @@ export async function searchGameByName(name, limit = 50, offset = 0) {
         involved_companies.company.name,
         rating,
         summary,
+        slug,
         game_type;
 
       search "${name}";

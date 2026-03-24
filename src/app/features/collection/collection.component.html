@@ -10,7 +10,7 @@
         (ngModelChange)="statusFilter.set($event)"
       >
         <option value="all">All</option>
-        <option value="backlog">Backlog</option>
+        <option value="backlog">To Play</option>
         <option value="playing">Playing</option>
         <option value="completed">Completed</option>
       </select>
@@ -28,7 +28,7 @@
         {{ getGameTypeLabel(game.game_type) }}
       </span>
       <span class="status-tag" [ngClass]="'status-' + game.status">
-        {{ game.status }}
+        {{ getStatusLabel(game.status) }}
       </span>
       <div class="delete-btn" (click)="openDeleteModal(game, $event)">✕</div>
       <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
@@ -44,7 +44,11 @@
   <!-- ZOOM MODAL -->
   <div *ngIf="zoomVisible()" class="zoom-modal" [ngStyle]="zoomStyle()">
     <div class="zoom-bg" [ngStyle]="{ 'background-image': getZoomBackground() }"></div>
-    <div class="zoom-content" [class.visible]="zoomContentVisible()">
+    <div
+      class="zoom-content"
+      [class.visible]="zoomContentVisible()"
+      [class.fade]="isTransitioning()"
+    >
       <div class="zoom-tags">
         <span
           class="game-tag my-2 mx-2"
@@ -56,7 +60,9 @@
       <div class="zoom-info">
         <h3>{{ zoomGame()?.name }}</h3>
         <div class="info-tags">
-          <span class="tag platform"
+          <span
+            class="tag platform"
+            [ngStyle]="{ 'background-color': getBrandColor(zoomGame()?.platform) }"
             >{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-MM-yyyy' }}</span
           >
           <span class="tag" [ngStyle]="{ 'background-color': getRegionColor(zoomGame()?.region) }">
@@ -69,7 +75,11 @@
           </span>
         </div>
         <div class="info-extra mb-2">
-          <span *ngIf="companiesList()" class="tag companies">
+          <span
+            *ngIf="companiesList()"
+            class="tag companies"
+            [ngStyle]="{ 'background-color': getBrandColor(companiesList()) }"
+          >
             {{ companiesList() }}
           </span>
           <span
@@ -85,20 +95,28 @@
             {{ getSummaryText(game.summary) }}
           </p>
           <button
-            *ngIf="game.summary && game.summary.length > 300"
+            *ngIf="game.summary && game.summary.length > 100"
             class="btn btn-link p-0 mt-0"
             (click)="toggleSummary()"
           >
             {{ summaryExpanded() ? 'See less' : 'See more' }}
           </button>
         </div>
+        <a
+          *ngIf="getIgdbUrl()"
+          [href]="getIgdbUrl()"
+          target="_blank"
+          class="btn btn-sm btn-outline-light mt-2"
+        >
+          View on IGDB
+        </a>
         <div class="status-wrapper mb-2">
           <span
             class="status-tag"
             [ngClass]="'status-' + zoomGame()?.status"
             (click)="cycleStatus(zoomGame())"
           >
-            {{ zoomGame()?.status }}
+            {{ getStatusLabel(zoomGame()?.status) }}
           </span>
         </div>
       </div>

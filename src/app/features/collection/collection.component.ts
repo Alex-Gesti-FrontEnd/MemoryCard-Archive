@@ -33,6 +33,8 @@ export class CollectionComponent implements OnInit {
 
   summaryExpanded = signal(false);
 
+  isTransitioning = signal(false);
+
   currentScreenshotIndex = signal(0);
   carouselImages = signal<string[]>([]);
   carouselInterval: any;
@@ -172,23 +174,29 @@ export class CollectionComponent implements OnInit {
     return this.games().findIndex((g) => g.id === game.id);
   }
 
-  showPreviousGame() {
-    const index = this.getCurrentIndex();
-    if (index > 0) {
-      const newGame = this.filteredGames()[index - 1];
+  changeGame(newGame: GameModel, direction: 'left' | 'right') {
+    this.isTransitioning.set(true);
+
+    setTimeout(() => {
       this.zoomGame.set(newGame);
       this.startScreenshotCarousel(newGame);
       this.summaryExpanded.set(false);
+
+      this.isTransitioning.set(false);
+    }, 200);
+  }
+
+  showPreviousGame() {
+    const index = this.getCurrentIndex();
+    if (index > 0) {
+      this.changeGame(this.filteredGames()[index - 1], 'left');
     }
   }
 
   showNextGame() {
     const index = this.getCurrentIndex();
     if (index < this.filteredGames().length - 1) {
-      const newGame = this.filteredGames()[index + 1];
-      this.zoomGame.set(newGame);
-      this.startScreenshotCarousel(newGame);
-      this.summaryExpanded.set(false);
+      this.changeGame(this.filteredGames()[index + 1], 'right');
     }
   }
 
@@ -196,9 +204,86 @@ export class CollectionComponent implements OnInit {
     const game = this.zoomGame();
     if (!game) return '';
     return `
-    linear-gradient(to bottom, rgba(0,0,0,0) 25%, rgba(0,0,0,0.9) 80%),
     url('${game.image || 'assets/no-image.png'}')
   `;
+  }
+
+  getBrandColor(text: string | undefined): string {
+    if (!text) return 'rgba(99, 110, 114, 0.8)';
+
+    const t = text.toLowerCase();
+
+    // NINTENDO
+    if (
+      t.includes('nintendo') ||
+      t.includes('switch') ||
+      t.includes('wii') ||
+      t.includes('gamecube') ||
+      t.includes('n64') ||
+      t.includes('nintendo 64') ||
+      t.includes('nes') ||
+      t.includes('snes') ||
+      t.includes('super nintendo') ||
+      t.includes('game boy') ||
+      t.includes('gba') ||
+      t.includes('game boy advance') ||
+      t.includes('ds') ||
+      t.includes('3ds')
+    ) {
+      return '#e60012';
+    }
+
+    // XBOX (Microsoft pero SOLO en contexto consola)
+    if (
+      t.includes('xbox') ||
+      t.includes('xbox one') ||
+      t.includes('xbox 360') ||
+      t.includes('series x') ||
+      t.includes('series s')
+    ) {
+      return '#107c10';
+    }
+
+    // PLAYSTATION / SONY
+    if (
+      t.includes('playstation') ||
+      t.includes('ps1') ||
+      t.includes('ps2') ||
+      t.includes('ps3') ||
+      t.includes('ps4') ||
+      t.includes('ps5') ||
+      t.includes('psp') ||
+      t.includes('ps vita') ||
+      t.includes('vita') ||
+      t.includes('sony')
+    ) {
+      return '#006fcd';
+    }
+
+    // SEGA
+    if (
+      t.includes('sega') ||
+      t.includes('mega drive') ||
+      t.includes('genesis') ||
+      t.includes('dreamcast') ||
+      t.includes('saturn') ||
+      t.includes('game gear')
+    ) {
+      return '#17569b';
+    }
+
+    // fallback
+    return 'rgba(99, 110, 114, 0.8)';
+  }
+
+  getStatusLabel(status: string | undefined): string {
+    const map: Record<string, string> = {
+      backlog: 'To Play',
+      playing: 'Playing',
+      completed: 'Completed',
+    };
+
+    return map[status ?? ''] || status || '';
   }
 
   cycleStatus(game: GameModel | null) {
@@ -255,13 +340,18 @@ export class CollectionComponent implements OnInit {
 
     if (short.length > 100) {
       return short.slice(0, 100) + '...';
-    }
-
-    return short + '.';
+    } else return short;
   }
 
   toggleSummary() {
     this.summaryExpanded.update((v) => !v);
+  }
+
+  getIgdbUrl(): string | null {
+    const game = this.zoomGame();
+    if (!game?.game_url) return null;
+
+    return `https://www.igdb.com/games/${game.game_url}`;
   }
 
   startScreenshotCarousel(game: GameModel) {
