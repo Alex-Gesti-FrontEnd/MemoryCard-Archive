@@ -5,18 +5,20 @@
       <span>MemoryCard Archive</span>
     </a>
 
-    <button
-      class="navbar-toggler"
-      type="button"
-      (click)="toggleMenu()"
-      aria-label="Toggle navigation"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
     @if (authService.isLoggedIn()) {
+      <button
+        class="navbar-toggler"
+        type="button"
+        (click)="toggleMenu()"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
       <div class="collapse navbar-collapse" [class.show]="menuOpen()">
-        <ul class="navbar-nav ms-auto gap-2">
+        <!--- DESKTOP --->
+
+        <ul class="navbar-nav ms-auto desktop-menu gap-3">
           <li class="nav-item d-flex align-items-center gap-3 mx-3">
             <span class="navbar-name">
               {{ authService.userName() || 'Player' }}
@@ -30,28 +32,45 @@
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: true }"
               (click)="closeMenu()"
+              >Search</a
             >
-              Search
-            </a>
           </li>
-
           <li class="nav-item">
             <a
               class="nav-link"
               routerLink="/collection"
               routerLinkActive="active"
               (click)="closeMenu()"
+              >Collection</a
             >
-              Collection
-            </a>
           </li>
-
           <li class="nav-item">
-            <a class="nav-link" routerLink="/map" routerLinkActive="active" (click)="closeMenu()">
-              Map
-            </a>
+            <a class="nav-link" routerLink="/map" routerLinkActive="active" (click)="closeMenu()"
+              >Map</a
+            >
           </li>
         </ul>
+
+        <!--- MOBILE --->
+
+        <div class="menu-overlay-content mobile-menu">
+          <button class="menu-close-btn" (click)="toggleMenu()">X</button>
+
+          <div class="menu-user">
+            <span class="navbar-name">
+              {{ authService.userName() || 'Player' }}
+            </span>
+            <button class="btn btn-outline-danger mt-2 logout" (click)="logout()">Logout</button>
+          </div>
+
+          <ul class="menu-links">
+            <li><a class="nav-link" routerLink="/" (click)="closeMenu()">Search</a></li>
+            <li>
+              <a class="nav-link" routerLink="/collection" (click)="closeMenu()">Collection</a>
+            </li>
+            <li><a class="nav-link" routerLink="/map" (click)="closeMenu()">Map</a></li>
+          </ul>
+        </div>
       </div>
     }
   </div>

@@ -4,10 +4,6 @@
   position: relative;
   overflow: hidden;
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
-
   &::before {
     content: '';
     position: absolute;
@@ -19,6 +15,7 @@
   width: min(420px, 35vw);
   min-width: 280px;
   flex: 1 1 auto;
+  padding: 3rem;
   background: rgba(0, 120, 255, 0.25);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
@@ -64,5 +61,39 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(0, 180, 255, 0.5);
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-wrapper {
+    flex-direction: column;
+    padding: 1.2rem 0.8rem;
+    gap: 1.2rem;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 1.2rem;
+    border-radius: 14px;
+  }
+
+  .auth-card h2 {
+    font-size: clamp(1.1rem, 5vw, 1.4rem);
+    text-align: center;
+  }
+
+  .auth-card form {
+    gap: clamp(0.5rem, 2vw, 0.9rem);
+  }
+
+  .auth-card input.form-control {
+    font-size: clamp(0.8rem, 3vw, 0.95rem);
+    padding: clamp(0.55rem, 2vw, 0.75rem) clamp(0.7rem, 2vw, 0.9rem);
+  }
+
+  .auth-card button {
+    font-size: clamp(0.85rem, 3vw, 1rem);
+    padding: clamp(0.55rem, 2vw, 0.75rem);
   }
 }

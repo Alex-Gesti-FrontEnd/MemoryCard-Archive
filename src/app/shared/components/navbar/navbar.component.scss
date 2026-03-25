@@ -5,15 +5,22 @@
   z-index: 10;
   position: sticky;
   top: 0;
+  padding: clamp(0.5rem, 1.5vw, 1.2rem) clamp(1rem, 2vw, 3rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .navbar .btn-outline-danger {
   border-color: rgba(255, 50, 50, 0.7);
   color: #fff;
-  border-radius: 12px;
-  padding: 0.3rem 0.8rem;
+  border-radius: clamp(8px, 1vw, 14px);
+  padding: clamp(0.2rem, 0.5vw, 0.6rem) clamp(0.6rem, 1vw, 1.2rem);
   font-weight: 600;
+  font-size: clamp(0.75rem, 1vw, 1rem);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
 
   &:hover {
     background: rgba(255, 50, 50, 0.8);
@@ -24,9 +31,11 @@
 
 .nav-link {
   color: #fff;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
+  padding: clamp(0.25rem, 0.5vw, 0.5rem) clamp(0.6rem, 1vw, 1rem);
+  border-radius: clamp(6px, 1vw, 12px);
+  font-size: clamp(0.8rem, 1vw, 1.2rem);
   transition: all 0.2s ease;
+  display: inline-block;
 
   &:hover,
   &.active {
@@ -41,19 +50,20 @@
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1vw, 1.5rem);
 
   img {
-    height: 60px;
+    height: clamp(30px, 5vw, 60px);
     transition: transform 0.3s ease;
   }
 
   span {
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 2vw, 1.5rem);
     color: #fff;
     font-family: 'Poppins', sans-serif;
     text-shadow: 0 0 6px rgba(0, 180, 255, 0.7);
+    transition: all 0.2s ease;
 
     &:hover {
       text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
@@ -64,12 +74,143 @@
 
 .navbar-name {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 1.2vw, 1.2rem);
   color: #fff;
   font-family: 'Poppins', sans-serif;
-  padding: 0.3rem 0.6rem;
-  border-radius: 8px;
+  padding: clamp(0.2rem, 0.5vw, 0.5rem) clamp(0.4rem, 1vw, 1rem);
+  border-radius: clamp(6px, 1vw, 10px);
   box-shadow: 0 4px 12px rgba(0, 180, 255, 0.5);
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
   background: rgba(0, 180, 255, 0.25);
+}
+
+.navbar-toggler {
+  padding: clamp(0.25rem, 1vw, 0.5rem);
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  border-radius: 8px;
+  margin-left: auto;
+}
+
+.navbar-toggler-icon {
+  width: clamp(20px, 3vw, 30px);
+  height: clamp(14px, 2vw, 20px);
+  background-size: contain;
+}
+
+.menu-close-btn {
+  display: none;
+}
+
+.desktop-menu {
+  display: flex;
+}
+
+.mobile-menu {
+  display: none;
+}
+
+/* MOBILE: Colapsar y ajustar tamaños */
+@media (max-width: 768px) {
+  .desktop-menu {
+    display: none;
+  }
+
+  .mobile-menu {
+    display: flex;
+  }
+
+  .nav-link {
+    font-size: clamp(0.75rem, 2vw, 1rem);
+    padding: 0.25rem 0.5rem;
+  }
+
+  .navbar-name {
+    font-size: clamp(1.2rem, 4vw, 1.25rem);
+    margin-top: 1rem;
+  }
+
+  .navbar-collapse.show {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0, 120, 255, 0.25);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .menu-overlay-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1rem, 3vw, 2rem);
+    margin: auto;
+    max-width: 90%;
+
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border-radius: 16px;
+
+    background: rgba(20, 20, 20, 0.7);
+    backdrop-filter: blur(12px);
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    animation: fadeInScale 0.25s ease;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .menu-close-btn {
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: 12px;
+
+    background: transparent;
+    border: none;
+    color: #fff;
+
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #00ffff;
+      transform: scale(1.1);
+    }
+  }
+
+  .menu-user {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .menu-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.8rem, 2vw, 1.5rem);
+    padding: 0;
+    margin: 0;
+  }
+
+  .menu-links .nav-link {
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+    padding: 0.4rem 1rem;
+  }
 }
