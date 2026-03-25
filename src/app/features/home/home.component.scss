@@ -94,21 +94,32 @@
   }
 }
 
-.filters-toggle {
-  position: fixed;
-  top: 60px;
-  left: 0;
-  background: #222;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 0 8px 8px 0;
-  cursor: pointer;
-  z-index: 1000;
-  transition: left 0.3s ease;
+.search-container {
+  display: flex;
+  gap: 8px;
+
+  input {
+    flex: 1;
+  }
 }
 
-.filters-toggle.open {
-  left: 260px;
+.filters-btn {
+  background: #222;
+  color: white;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0 12px;
+  white-space: nowrap;
+
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #333;
+  }
+
+  &:active {
+    transform: scale(1.1);
+  }
 }
 
 .filters-sidebar {

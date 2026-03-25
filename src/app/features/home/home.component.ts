@@ -31,6 +31,10 @@ export class HomeComponent implements OnInit {
   searchTotal = signal(0);
 
   filtersOpen = signal(false);
+  selectedPlatforms = signal<string[]>([]);
+  selectedGenres = signal<string[]>([]);
+  selectedYears = signal<string[]>([]);
+  selectedTypes = signal<string[]>([]);
 
   selectedGame = signal<any | null>(null);
   gameOpen = signal(false);
@@ -57,11 +61,6 @@ export class HomeComponent implements OnInit {
     }
 
     this.loadGames(1);
-  }
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 
   async loadGames(page: number) {

@@ -44,30 +44,30 @@
     (ngModelChange)="searchTerm.set($event)"
   />
 
-  <div class="group-tags d-flex gap-2 mb-3">
+  <div class="group-tags d-flex gap-3 mb-3">
     <span
-      class="game-tag big tag-all"
+      class="game-tags big tag-all"
       [class.active]="groupMode() === 'none'"
       (click)="setGroupMode('none')"
       >All</span
     >
-    <span class="game-tag big tag-fav" [class.active]="favoritesOnly()" (click)="toggleFavorites()"
+    <span class="game-tags tag-fav" [class.active]="favoritesOnly()" (click)="toggleFavorites()"
       >&#x2605; Favorites</span
     >
     <span
-      class="game-tag big tag-plat"
+      class="game-tags tag-plat"
       [class.active]="groupMode() === 'platform'"
       (click)="setGroupMode('platform')"
       >&#x1F3AE; Platform</span
     >
     <span
-      class="game-tag big tag-com"
+      class="game-tags tag-com"
       [class.active]="groupMode() === 'company'"
       (click)="setGroupMode('company')"
       >&#x1F3E2; Company</span
     >
     <span
-      class="game-tag big tag-decade"
+      class="game-tags tag-decade"
       [class.active]="groupMode() === 'year'"
       (click)="setGroupMode('year')"
       >&#x1F4C5; Decade</span

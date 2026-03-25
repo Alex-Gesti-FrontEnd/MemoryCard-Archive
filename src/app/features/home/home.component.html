@@ -1,8 +1,5 @@
 <section class="container mt-4">
   <!-- ADVANCE SEARCH SIDEBAR -->
-  <div class="filters-toggle" [class.open]="filtersOpen()" (click)="filtersOpen.update(v => !v)">
-    Advanced Search
-  </div>
   <div class="filters-sidebar" [class.open]="filtersOpen()">
     <h5 class="mb-3">Advanced Search</h5>
     <div class="mb-3">
@@ -139,21 +136,18 @@
     class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3"
   >
     <h2 class="mb-2">Home</h2>
-    <div class="d-flex flex-row justify-content-end align-items-center gap-4">
-      <h5 class="mb-0">{{ authService.getUserName() }}</h5>
-      <button class="btn btn-outline-danger btn-sm" (click)="logout()">Logout</button>
-    </div>
   </div>
 
   <!--  GRID DE JUEGOS -->
 
-  <div class="mb-3">
+  <div class="search-container mb-3">
     <input
       type="text"
       class="form-control"
       placeholder="Search games..."
       (input)="onSearch($any($event.target).value)"
     />
+    <button class="filters-btn" (click)="filtersOpen.update(v => !v)">Advanced</button>
   </div>
   <div class="games-grid mt-4">
     @for (game of isSearching() ? searchResults() : gamesExplore(); track game.id) {
