@@ -1,0 +1,275 @@
+<section class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My Collection</h2>
+    <div class="collection-stats d-flex gap-3 align-items-center">
+      <div
+        class="stat-tag total"
+        [class.active]="statusFilter() === 'all'"
+        (click)="changeStatusFilter('all')"
+      >
+        <span class="label">Total:</span> {{ games().length }}
+      </div>
+      <div
+        class="stat-tag backlog"
+        [class.active]="statusFilter() === 'backlog'"
+        (click)="changeStatusFilter('backlog')"
+      >
+        <span class="label">To Play:</span>
+        {{ games().filter(g => g.status === 'backlog').length }}
+      </div>
+      <div
+        class="stat-tag playing"
+        [class.active]="statusFilter() === 'playing'"
+        (click)="changeStatusFilter('playing')"
+      >
+        <span class="label">Playing:</span>
+        {{ games().filter(g => g.status === 'playing').length }}
+      </div>
+      <div
+        class="stat-tag completed"
+        [class.active]="statusFilter() === 'completed'"
+        (click)="changeStatusFilter('completed')"
+      >
+        <span class="label">Completed:</span>
+        {{ games().filter(g => g.status === 'completed').length }}
+      </div>
+    </div>
+  </div>
+
+  <input
+    type="text"
+    class="form-control mb-3"
+    placeholder="Search game..."
+    [ngModel]="searchTerm()"
+    (ngModelChange)="searchTerm.set($event)"
+  />
+
+  <div class="group-tags d-flex gap-3 mb-3">
+    <span
+      class="game-tags big tag-all"
+      [class.active]="groupMode() === 'none'"
+      (click)="setGroupMode('none')"
+      >All</span
+    >
+    <span class="game-tags tag-fav" [class.active]="favoritesOnly()" (click)="toggleFavorites()"
+      >&#x2605; Favorites</span
+    >
+    <span
+      class="game-tags tag-plat"
+      [class.active]="groupMode() === 'platform'"
+      (click)="setGroupMode('platform')"
+      >&#x1F3AE; Platform</span
+    >
+    <span
+      class="game-tags tag-com"
+      [class.active]="groupMode() === 'company'"
+      (click)="setGroupMode('company')"
+      >&#x1F3E2; Company</span
+    >
+    <span
+      class="game-tags tag-decade"
+      [class.active]="groupMode() === 'year'"
+      (click)="setGroupMode('year')"
+      >&#x1F4C5; Decade</span
+    >
+  </div>
+
+  <div *ngIf="isInsideGroup()" class="mb-3">
+    <button class="btn-back" (click)="closeFolder()">< Back</button>
+  </div>
+
+  <div *ngIf="groupMode() !== 'none' && !isInsideGroup() && !favoritesOnly()">
+    <div class="games-grid" [class.animating]="isGridAnimating()">
+      <div
+        class="game-card folder-card"
+        *ngFor="let group of groupedGames() | keyvalue"
+        (click)="openFolder(group.key, group.value, $event)"
+      >
+        <div class="folder-preview" [ngClass]="'count-' + group.value.slice(0, 4).length">
+          <img
+            *ngFor="let game of group.value.slice(0, 4)"
+            [src]="game.image || 'assets/no-image.png'"
+          />
+        </div>
+
+        <div class="game-info visible">
+          <h6>{{ group.key }}</h6>
+          <p>{{ group.value.length }} games</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="games-grid mt-4"
+    [class.animating]="isGridAnimating()"
+    *ngIf="groupMode() === 'none' || isInsideGroup()"
+  >
+    <div
+      class="game-card"
+      *ngFor="let game of filteredGames()"
+      [attr.data-id]="game.id"
+      (click)="openZoom(game, $event)"
+    >
+      <span class="game-tag" [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()">
+        {{ getGameTypeLabel(game.game_type) }}
+      </span>
+      <span class="status-tag" [ngClass]="'status-' + game.status">
+        {{ getStatusLabel(game.status) }}
+      </span>
+      <div class="delete-btn" (click)="openDeleteModal(game, $event)">✕</div>
+      <img [src]="game.image || 'assets/no-image.png'" class="game-poster" />
+
+      <div class="game-info">
+        <h6>{{ game.name }}</h6>
+        <p>{{ game.platform }} • {{ game.releaseDate | date: 'yyyy' : '----' }}</p>
+        <p>{{ game.region }} • {{ game.format | titlecase }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOLDER ZOOM ANIMATION -->
+  <div
+    *ngIf="isFolderZooming()"
+    class="folder-zoom-overlay"
+    [class.fade-out]="!folderZoomVisible()"
+    [ngStyle]="folderZoomStyle()"
+  >
+    <div class="folder-preview big" [ngClass]="'count-' + zoomPreviewGames().length">
+      <img *ngFor="let game of zoomPreviewGames()" [src]="game.image || 'assets/no-image.png'" />
+    </div>
+  </div>
+
+  <!-- ZOOM MODAL -->
+  <div *ngIf="zoomVisible()" class="zoom-modal" [ngStyle]="zoomStyle()">
+    <div class="zoom-bg" [ngStyle]="{ 'background-image': getZoomBackground() }"></div>
+    <div
+      class="zoom-content"
+      [class.visible]="zoomContentVisible()"
+      [class.fade]="isTransitioning()"
+    >
+      <div class="zoom-tags">
+        <span
+          class="game-tag my-2 mx-2"
+          [ngClass]="'tag-' + getGameTypeLabel(zoomGame()?.game_type).toLowerCase()"
+        >
+          {{ getGameTypeLabel(zoomGame()?.game_type) }}
+        </span>
+      </div>
+      <div class="zoom-info">
+        <h3>{{ zoomGame()?.name }}</h3>
+        <div class="info-tags">
+          <span
+            class="tag platform"
+            [ngStyle]="{ 'background-color': getBrandColor(zoomGame()?.platform) }"
+            >{{ zoomGame()?.platform }} • {{ zoomGame()?.releaseDate | date: 'dd-MM-yyyy' }}</span
+          >
+          <span class="tag" [ngStyle]="{ 'background-color': getRegionColor(zoomGame()?.region) }">
+            {{ zoomGame()?.region }}
+          </span>
+          <span
+            class="tag format"
+            [innerHTML]="getFormatIcon(zoomGame()?.format) + ' ' + (zoomGame()?.format | titlecase)"
+          >
+          </span>
+        </div>
+        <div class="info-extra mb-2">
+          <span
+            *ngIf="companiesList()"
+            class="tag companies"
+            [ngStyle]="{ 'background-color': getBrandColor(companiesList()) }"
+          >
+            {{ companiesList() }}
+          </span>
+          <span
+            *ngIf="zoomGame()?.rating !== undefined && zoomGame()?.rating !== null"
+            class="tag rating"
+          >
+            &#x2B50; {{ zoomGame()?.rating | number: '1.0-0' }}/100
+          </span>
+        </div>
+        <p>{{ zoomGame()?.genre }}</p>
+        <div *ngIf="zoomGame() as game">
+          <p class="summary">
+            {{ getSummaryText(game.summary) }}
+          </p>
+          <button
+            *ngIf="game.summary && game.summary.length > 100"
+            class="btn btn-link p-0 mt-0"
+            (click)="toggleSummary()"
+          >
+            {{ summaryExpanded() ? 'See less' : 'See more' }}
+          </button>
+        </div>
+        <a
+          *ngIf="getIgdbUrl()"
+          [href]="getIgdbUrl()"
+          target="_blank"
+          class="btn btn-sm btn-outline-light mt-2"
+        >
+          View on IGDB
+        </a>
+        <div class="status-wrapper mb-2 gap-2">
+          <span
+            class="status-tag"
+            [ngClass]="'status-' + zoomGame()?.status"
+            (click)="cycleStatus(zoomGame())"
+          >
+            {{ getStatusLabel(zoomGame()?.status) }}
+          </span>
+          <span
+            class="date-tag started"
+            *ngIf="zoomGame()?.status === 'playing' && zoomGame()?.startedAt"
+          >
+            {{ zoomGame()?.startedAt | date: 'dd-MM-yyyy' }}
+          </span>
+          <span
+            class="date-tag completed"
+            *ngIf="zoomGame()?.status === 'completed' && zoomGame()?.completedAt"
+          >
+            {{ zoomGame()?.completedAt | date: 'dd-MM-yyyy' }}
+          </span>
+          <span
+            class="favorite-icon rounded-circle"
+            [class.active]="zoomGame()?.favorite"
+            (click)="toggleFavorite(zoomGame()!, $event)"
+          >
+            &#9733;
+          </span>
+        </div>
+      </div>
+      <div class="zoom-carousel" *ngIf="carouselImages().length">
+        <img
+          class="main-image"
+          [src]="carouselImages()[currentScreenshotIndex()]"
+          alt="Game screenshot"
+        />
+      </div>
+      <div class="close-btn" (click)="closeZoom()">✕</div>
+    </div>
+    <div class="zoom-nav prev" *ngIf="getCurrentIndex() > 0" (click)="showPreviousGame()"><</div>
+    <div
+      class="zoom-nav next"
+      *ngIf="getCurrentIndex() < filteredGames().length - 1"
+      (click)="showNextGame()"
+    >
+      >
+    </div>
+  </div>
+
+  <!-- MODAL DELETE -->
+  <div class="custom-modal" *ngIf="showDeleteModal()">
+    <div class="modal-content">
+      <h5>Delete game</h5>
+      <p>
+        Are you sure you want to delete <strong>{{ gameToDelete()?.name }}</strong
+        >?
+      </p>
+
+      <div class="modal-actions">
+        <button class="btn btn-sm btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-sm btn-danger" (click)="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</section>

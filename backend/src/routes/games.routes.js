@@ -3,7 +3,6 @@ import { getConnection } from '../db.js';
 import { getPopularGames, searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
-import { getAveragePrice, getAllEbayPrices } from '../services/ebay.service.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 
 function formatStore(s) {
@@ -46,13 +45,18 @@ const router = express.Router();
 // Route to search for popular games in IGDB
 router.get('/igdb/popular', async (req, res) => {
   try {
-    const page = Number(req.query.page) || 1;
+    const { page, platforms, years, types } = req.query;
+
     const limit = 50;
-    const offset = (page - 1) * limit;
+    const offset = (Number(page) - 1) * limit;
 
-    const games = await getPopularGames(limit, offset);
+    const data = await getPopularGames(limit, offset, {
+      platforms,
+      years,
+      types,
+    });
 
-    res.json(games);
+    res.json(data);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -65,12 +69,18 @@ router.get('/igdb/popular', async (req, res) => {
 // Route to search for a game by name in IGDB
 router.get('/igdb/search', async (req, res) => {
   try {
-    const { name, page } = req.query;
+    const { name, page, platforms, years, types } = req.query;
 
     const limit = 50;
     const offset = (Number(page) - 1) * limit;
 
-    const data = await searchGameByName(name, limit, offset);
+    console.log('FILTERS:', req.query);
+
+    const data = await searchGameByName(name, limit, offset, {
+      platforms,
+      years,
+      types,
+    });
 
     res.json(data);
   } catch (error) {
@@ -82,46 +92,17 @@ router.get('/igdb/search', async (req, res) => {
   }
 });
 
-// EBAY average price
-router.get('/price', async (req, res) => {
-  const { name, platform, region } = req.query;
-
-  if (!name || !platform || !region) {
-    return res.status(400).json({ message: 'name, platform and region required' });
-  }
-
+// Route for GET platforms from IGDB
+router.get('/igdb/platforms', async (req, res) => {
   try {
-    const searchQuery = `${name} ${platform} ${region}`;
-
-    const result = await getAveragePrice(searchQuery);
-
-    if (!result) {
-      return res.status(404).json({ message: 'No prices found' });
-    }
-
-    res.json(result);
+    const data = await getPlatforms();
+    res.json(data);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'eBay error', error: err.message });
+    res.status(500).json({ message: 'Platforms error' });
   }
 });
 
-// EBAY all prices for histogram
-router.get('/ebay-prices', async (req, res) => {
-  const { name, platform, region } = req.query;
-  if (!name || !platform || !region) return res.status(400).json({ message: 'Faltan parámetros' });
-
-  try {
-    const query = `${name} ${platform} ${region}`;
-    const prices = await getAllEbayPrices(query);
-    res.json(prices);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error eBay', error: err.message });
-  }
-});
-
-// CRUD routes for local games database
+// Routes for local games database
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const connection = await getConnection();
@@ -132,7 +113,14 @@ router.get('/', authMiddleware, async (req, res) => {
 
     const formatted = rows.map((game) => ({
       ...game,
-      releaseDate: game.releaseDate ? game.releaseDate.toISOString().split('T')[0] : null,
+      releaseDate: game.releaseDate || null,
+      screenshots:
+        typeof game.screenshots === 'string'
+          ? JSON.parse(game.screenshots)
+          : game.screenshots || [],
+      artworks: typeof game.artworks === 'string' ? JSON.parse(game.artworks) : game.artworks || [],
+      companies:
+        typeof game.companies === 'string' ? JSON.parse(game.companies) : game.companies || [],
     }));
 
     res.json(formatted);
@@ -144,20 +132,59 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 router.post('/', authMiddleware, async (req, res) => {
-  const { name, platform, region, genre, releaseDate, avgPrice, image } = req.body;
+  const {
+    name,
+    platform,
+    region,
+    genre,
+    releaseDate,
+    image,
+    status,
+    format,
+    game_url,
+    game_type,
+    summary,
+    rating,
+    screenshots,
+    artworks,
+    companies,
+    startedAt,
+    completedAt,
+    favorite,
+  } = req.body;
 
   try {
     const connection = await getConnection();
-
     const userId = req.user.id;
 
     const [result] = await connection.query(
       `
       INSERT INTO games 
-      (user_id, name, platform, region, genre, releaseDate, avgPrice, image)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type,
+       summary, rating, screenshots, artworks, companies, startedAt, completedAt, favorite)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [userId, name, platform, region, genre, releaseDate, avgPrice, image],
+      [
+        userId,
+        name,
+        platform,
+        region,
+        genre,
+        releaseDate,
+        image,
+        status || 'backlog',
+        format || 'physical',
+        game_url || null,
+        game_type ?? 0,
+        summary || null,
+        rating || null,
+        JSON.stringify(screenshots || []),
+        JSON.stringify(artworks || []),
+        JSON.stringify(companies || []),
+        startedAt || null,
+        completedAt || null,
+        favorite ?? false,
+      ],
     );
 
     await connection.end();
@@ -171,20 +198,85 @@ router.post('/', authMiddleware, async (req, res) => {
 
 router.put('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { name, platform, region, genre, releaseDate, avgPrice, image } = req.body;
+
+  const {
+    name,
+    platform,
+    region,
+    genre,
+    releaseDate,
+    image,
+    status,
+    format,
+    game_url,
+    game_type,
+    summary,
+    rating,
+    screenshots,
+    artworks,
+    companies,
+    startedAt,
+    completedAt,
+    favorite,
+  } = req.body;
 
   try {
     const connection = await getConnection();
-
     const userId = req.user.id;
+    const formattedReleaseDate = releaseDate
+      ? new Date(releaseDate).toISOString().split('T')[0]
+      : null;
+    const formattedStartedAt = startedAt ? new Date(startedAt).toISOString().split('T')[0] : null;
+    const formattedCompletedAt = completedAt
+      ? new Date(completedAt).toISOString().split('T')[0]
+      : null;
 
     await connection.query(
       `
       UPDATE games 
-      SET name=?, platform=?, region=?, genre=?, releaseDate=?, avgPrice=?, image=? 
+      SET 
+        name=?,
+        platform=?,
+        region=?,
+        genre=?,
+        releaseDate=?,
+        image=?,
+        status=?,
+        format=?,
+        game_url=?,
+        game_type=?,
+        summary=?,
+        rating=?,
+        screenshots=?,
+        artworks=?,
+        companies=?,
+        startedAt=?,
+        completedAt=?,
+        favorite=?
       WHERE id=? AND user_id=?
       `,
-      [name, platform, region, genre, releaseDate, avgPrice, image, id, userId], // 🔥 CAMBIO
+      [
+        name,
+        platform,
+        region,
+        genre,
+        formattedReleaseDate,
+        image,
+        status,
+        format,
+        game_url,
+        game_type,
+        summary || null,
+        rating || null,
+        JSON.stringify(screenshots || []),
+        JSON.stringify(artworks || []),
+        JSON.stringify(companies || []),
+        formattedStartedAt,
+        formattedCompletedAt,
+        favorite,
+        id,
+        userId,
+      ],
     );
 
     await connection.end();

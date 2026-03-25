@@ -1,50 +1,24 @@
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
-
 import { GamesService } from '../../core/services/games.service';
 import { GameModel } from '../../core/models/game.model';
-
-type GameVersion = {
-  platform: string;
-  region: string;
-  releaseDate: string;
-};
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent implements OnInit {
-  private fb = inject(FormBuilder);
   private gamesService = inject(GamesService);
-
   private router = inject(Router);
-  private authService = inject(AuthService);
-
-  showForm = signal(false);
-  editingId = signal<number | null>(null);
-
-  games = this.gamesService.games;
-
-  platforms = signal<string[]>([]);
-  platformsData = signal<GameVersion[]>([]);
-
-  regions = signal(['PAL', 'NTSC-U', 'NTSC-J', 'Worldwide']);
-
-  loadingPrice = signal(false);
-
-  sortBy = signal<'id' | 'name' | 'releaseDate' | 'avgPrice' | null>(null);
-  sortDesc = signal(false);
-
-  gameCount = computed(() => this.games().length);
+  authService = inject(AuthService);
 
   gamesExplore = signal<any[]>([]);
   currentPage = signal(1);
@@ -57,19 +31,24 @@ export class HomeComponent implements OnInit {
   searchTotal = signal(0);
 
   filtersOpen = signal(false);
+  selectedPlatforms = signal<string[]>([]);
+  selectedYears = signal<string[]>([]);
+  selectedTypes = signal<string[]>([]);
+
+  selectedGame = signal<any | null>(null);
+  gameOpen = signal(false);
+
+  selectedRegion = signal('PAL');
+  selectedFormat = signal('Physical');
+
+  images = signal<string[]>([]);
+  currentImageIndex = signal(0);
+  carouselInterval: any = null;
+
+  showConfirmation = signal(false);
 
   totalPages = computed(() => {
     return Math.ceil(this.searchTotal() / 50) || 1;
-  });
-
-  form = this.fb.nonNullable.group({
-    name: ['', Validators.required],
-    platform: ['', Validators.required],
-    region: ['', Validators.required],
-    genre: ['', Validators.required],
-    releaseDate: ['', Validators.required],
-    avgPrice: [0, Validators.required],
-    image: [''],
   });
 
   ngOnInit(): void {
@@ -83,166 +62,20 @@ export class HomeComponent implements OnInit {
     this.loadGames(1);
   }
 
-  sortedGames = computed(() => {
-    const gamesArray = [...this.games()];
-    const key = this.sortBy();
-
-    if (!key) return gamesArray;
-
-    const sorted = gamesArray.sort((a, b) => {
-      let valA: any = a[key] ?? '';
-      let valB: any = b[key] ?? '';
-
-      if (key === 'avgPrice') {
-        valA = Number(valA);
-        valB = Number(valB);
-      }
-
-      if (key === 'releaseDate') {
-        valA = new Date(valA).getTime();
-        valB = new Date(valB).getTime();
-      }
-
-      if (typeof valA === 'string') {
-        return valA.localeCompare(valB);
-      }
-
-      return valA - valB;
-    });
-
-    return this.sortDesc() ? sorted.reverse() : sorted;
-  });
-
-  toggleSort(key: 'id' | 'name' | 'releaseDate' | 'avgPrice') {
-    if (this.sortBy() === key) {
-      this.sortDesc.update((v) => !v);
-    } else {
-      this.sortBy.set(key);
-      this.sortDesc.set(false);
-    }
-  }
-
-  addGame() {
-    if (this.form.invalid) return;
-
-    const gameData = this.form.getRawValue() as GameModel;
-
-    if (this.editingId()) {
-      this.gamesService.updateGame(this.editingId()!, gameData);
-      this.editingId.set(null);
-    } else {
-      this.gamesService.addGame(gameData);
-    }
-
-    this.resetForm();
-  }
-
-  editGame(game: GameModel) {
-    this.editingId.set(game.id);
-    this.form.patchValue(game);
-    this.showForm.set(true);
-  }
-
-  deleteGame(id: number) {
-    this.gamesService.deleteGame(id);
-  }
-
-  toggleForm() {
-    this.showForm.update((v) => !v);
-
-    if (!this.showForm()) {
-      this.resetForm();
-    }
-  }
-
-  private resetForm() {
-    this.editingId.set(null);
-    this.form.reset();
-    this.platforms.set([]);
-    this.platformsData.set([]);
-  }
-
-  /*autoFillFromIGDB() {
-    const name = this.form.value.name;
-    if (!name) return;
-
-    this.gamesService.searchIGDB(name).subscribe((data) => {
-      const versions: GameVersion[] = (data.release_dates ?? [])
-        .map(
-          (r: any): GameVersion => ({
-            platform: r.platform?.name ?? '',
-            region: r.region ?? '',
-            releaseDate: r.date ? new Date(r.date * 1000).toISOString().slice(0, 10) : '',
-          }),
-        )
-        .filter((v: GameVersion) => v.platform);
-
-      this.platformsData.set(versions);
-
-      this.platforms.set(Array.from(new Set(versions.map((v) => v.platform))));
-
-      this.form.patchValue({
-        name: data.name,
-        genre: data.genres?.map((g: any) => g.name).join(', ') ?? '',
-        releaseDate: '',
-        image: data.cover ? `https:${data.cover.url.replace('t_thumb', 't_cover_big')}` : '',
-        platform: '',
-        region: '',
-      });
-    });
-  }*/
-
-  onPlatformChange(selected: string) {
-    const version = this.platformsData().find((v) => v.platform === selected);
-
-    if (!version) return;
-
-    this.form.patchValue({
-      platform: version.platform,
-      releaseDate: version.releaseDate,
-    });
-  }
-
-  onRegionChange(selected: string) {
-    this.form.patchValue({ region: selected });
-  }
-
-  async fetchEbayPrice() {
-    const { name, platform, region } = this.form.value;
-
-    if (!name || !platform || !region) return;
-
-    try {
-      this.loadingPrice.set(true);
-
-      const data = await firstValueFrom(this.gamesService.getEbayPrice(name, platform, region));
-
-      this.form.patchValue({
-        avgPrice: data.median,
-      });
-    } catch (err) {
-      console.error(err);
-      alert('No price data found.');
-    } finally {
-      this.loadingPrice.set(false);
-    }
-  }
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
   async loadGames(page: number) {
     try {
       this.loading.set(true);
 
-      const data = await firstValueFrom(this.gamesService.getPopularGames(page));
+      const data = await firstValueFrom(
+        this.gamesService.getPopularGames(page, {
+          platforms: this.selectedPlatforms(),
+          years: this.selectedYears(),
+          types: this.selectedTypes(),
+        }),
+      );
 
       this.gamesExplore.set(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
-      this.currentPage.set(page);
-
       this.currentPage.set(page);
     } catch (err) {
       console.error(err);
@@ -298,6 +131,10 @@ export class HomeComponent implements OnInit {
     return pages;
   });
 
+  onInputChange(value: string) {
+    this.searchTerm.set(value);
+  }
+
   async onSearch(value: string) {
     this.searchTerm.set(value);
 
@@ -310,10 +147,21 @@ export class HomeComponent implements OnInit {
 
     try {
       this.isSearching.set(true);
-
       this.currentPage.set(1);
 
-      const data = await firstValueFrom(this.gamesService.searchIGDB(value, 1));
+      console.log('FRONT FILTERS:', {
+        platforms: this.selectedPlatforms(),
+        years: this.selectedYears(),
+        types: this.selectedTypes(),
+      });
+
+      const data = await firstValueFrom(
+        this.gamesService.searchIGDB(value, 1, {
+          platforms: this.selectedPlatforms(),
+          years: this.selectedYears(),
+          types: this.selectedTypes(),
+        }),
+      );
 
       this.searchResults.set(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
@@ -323,9 +171,194 @@ export class HomeComponent implements OnInit {
   }
 
   async searchPage(page: number) {
-    const data = await firstValueFrom(this.gamesService.searchIGDB(this.searchTerm(), page));
+    const data = await firstValueFrom(
+      this.gamesService.searchIGDB(this.searchTerm(), page, {
+        platforms: this.selectedPlatforms(),
+        years: this.selectedYears(),
+        types: this.selectedTypes(),
+      }),
+    );
 
     this.searchResults.set(data.results || []);
     this.currentPage.set(page);
+  }
+
+  toggleFilter(signalRef: any, value: string, autoSearch = false) {
+    const current = signalRef();
+
+    if (current.includes(value)) {
+      signalRef.set(current.filter((v: string) => v !== value));
+    } else {
+      signalRef.set([...current, value]);
+    }
+
+    if (autoSearch && this.searchTerm()) {
+      this.triggerSearch();
+    } else if (!this.searchTerm()) {
+      this.currentPage.set(1);
+      this.loadGames(1);
+    }
+  }
+
+  triggerSearch() {
+    if (this.searchTerm()) {
+      this.onSearch(this.searchTerm());
+    } else {
+      this.loadGames(1);
+    }
+  }
+
+  async applyFilters() {
+    const filters = {
+      platforms: this.selectedPlatforms(),
+      years: this.selectedYears(),
+      types: this.selectedTypes(),
+    };
+
+    this.currentPage.set(1);
+
+    try {
+      if (this.searchTerm()) {
+        this.isSearching.set(true);
+
+        const data = await firstValueFrom(
+          this.gamesService.searchIGDB(this.searchTerm(), 1, filters),
+        );
+
+        this.searchResults.set(data.results || []);
+        this.searchTotal.set(Number(data.total || 0));
+      } else {
+        this.isSearching.set(false);
+
+        const data = await firstValueFrom(this.gamesService.getPopularGames(1, filters));
+
+        this.gamesExplore.set(data.results || []);
+        this.searchTotal.set(Number(data.total || 0));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  resetFilters() {
+    this.selectedPlatforms.set([]);
+    this.selectedYears.set([]);
+    this.selectedTypes.set([]);
+
+    if (this.searchTerm()) {
+      this.onSearch(this.searchTerm());
+    } else {
+      this.loadGames(1);
+    }
+  }
+
+  openGameInfo(game: any) {
+    if (this.selectedGame()?.id === game.id && this.gameOpen()) {
+      this.gameOpen.set(false);
+      return;
+    }
+
+    this.selectedGame.set(game);
+    this.gameOpen.set(true);
+
+    const imgs: string[] = [];
+
+    if (game.cover?.url) {
+      imgs.push('https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x'));
+    }
+
+    if (game.screenshots) {
+      game.screenshots.slice(0, 5 - imgs.length).forEach((s: any) => {
+        imgs.push('https:' + s.url.replace('t_thumb', 't_cover_big_2x'));
+      });
+    }
+
+    if (game.artworks && imgs.length < 9) {
+      game.artworks.slice(0, 9 - imgs.length).forEach((a: any) => {
+        imgs.push('https:' + a.url.replace('t_thumb', 't_cover_big_2x'));
+      });
+    }
+
+    this.images.set(imgs);
+    this.currentImageIndex.set(0);
+
+    if (this.carouselInterval) clearInterval(this.carouselInterval);
+
+    if (imgs.length > 0) {
+      this.carouselInterval = setInterval(() => {
+        this.currentImageIndex.update((i) => (i + 1) % this.images().length);
+      }, 3000);
+    }
+
+    this.selectedRegion.set('PAL');
+    this.selectedFormat.set('Physical');
+  }
+
+  getGameTypeLabel(type: number | undefined): string {
+    const map: Record<number, string> = {
+      0: 'Game',
+      1: 'DLC',
+      2: 'Expansion',
+      3: 'Bundle',
+      4: 'Expansion',
+      8: 'Remake',
+      9: 'Remaster',
+      10: 'Expanded',
+      11: 'Port',
+      12: 'Fangame',
+    };
+
+    return map[type ?? -1] || 'Other';
+  }
+
+  getShortSummary(text: string | undefined): string {
+    if (!text) return 'No description available';
+
+    const short = text.split('.').slice(0, 2).join('.');
+
+    if (short.length > 500) {
+      return short.slice(0, 500) + '...';
+    }
+
+    return short + '.';
+  }
+
+  async addToCollection(game: any, region: string, format: string) {
+    const newGame: GameModel = {
+      name: game.name,
+      platform: game.main_platform?.name || 'Unknown',
+      region,
+      genre: game.genres?.map((g: any) => g.name).join(', ') || '',
+      releaseDate: game.first_release_date
+        ? new Date(game.first_release_date * 1000).toISOString().slice(0, 10)
+        : null,
+      status: 'backlog',
+      format: format.toLowerCase() as 'physical' | 'digital',
+      image: game.cover ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x') : '',
+      game_url: game.slug || null,
+      game_type: game.game_type ?? 0,
+      summary: game.summary || null,
+      rating: game.rating || null,
+      screenshots: game.screenshots || [],
+      artworks: game.artworks || [],
+      companies: game.involved_companies || [],
+    };
+
+    await this.gamesService.addGame(newGame);
+    this.showConfirmation.set(true);
+    setTimeout(() => this.showConfirmation.set(false), 2000);
+  }
+
+  @HostListener('document:click', ['$event'])
+  handleClickOutside(event: MouseEvent) {
+    const sidebar = document.querySelector('.gameinfo-sidebar');
+
+    if (!sidebar) return;
+
+    const target = event.target as Node;
+
+    if (this.gameOpen() && !sidebar.contains(target)) {
+      this.gameOpen.set(false);
+    }
   }
 }

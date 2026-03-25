@@ -1,26 +1,44 @@
 <section class="container mt-4">
   <!-- ADVANCE SEARCH SIDEBAR -->
-  <div class="filters-toggle" [class.open]="filtersOpen()" (click)="filtersOpen.update(v => !v)">
-    Advanced Search
-  </div>
   <div class="filters-sidebar" [class.open]="filtersOpen()">
     <h5 class="mb-3">Advanced Search</h5>
     <div class="mb-3">
       <small>Platform</small>
       <div class="filter-boxes mt-2">
-        @for (p of ['PC', 'PS5', 'Xbox', 'Switch']; track p) {
-          <div class="filter-box">
+        @for (
+          p of [
+            'Switch',
+            'Wii U',
+            'Wii',
+            'GameCube',
+            'Nintendo 64',
+            'SNES',
+            'NES',
+            'Nintendo 3DS',
+            'Nintendo DS',
+            'Game Boy Advance',
+            'Game Boy',
+            'PS5',
+            'PS4',
+            'PS3',
+            'PS2',
+            'PS1',
+            'PS Vita',
+            'PSP',
+            'Xbox Series',
+            'Xbox One',
+            'Xbox 360',
+            'Xbox',
+            'PC',
+          ];
+          track p
+        ) {
+          <div
+            class="filter-box"
+            [class.active]="selectedPlatforms().includes(p)"
+            (click)="toggleFilter(selectedPlatforms, p, false)"
+          >
             {{ p }}
-          </div>
-        }
-      </div>
-    </div>
-    <div class="mb-3">
-      <small>Genre</small>
-      <div class="filter-boxes mt-2">
-        @for (g of ['Action', 'RPG', 'Shooter', 'Sports']; track g) {
-          <div class="filter-box">
-            {{ g }}
           </div>
         }
       </div>
@@ -28,8 +46,12 @@
     <div class="mb-3">
       <small>Year</small>
       <div class="filter-boxes mt-2">
-        @for (y of ['2024', '2023', '2020s', '2010s']; track y) {
-          <div class="filter-box">
+        @for (y of ['2020s', '2010s', '2000s', '90s', '80s']; track y) {
+          <div
+            class="filter-box"
+            [class.active]="selectedYears().includes(y)"
+            (click)="toggleFilter(selectedYears, y, false)"
+          >
             {{ y }}
           </div>
         }
@@ -38,234 +60,172 @@
     <div class="mb-3">
       <small>Type</small>
       <div class="filter-boxes mt-2">
-        @for (t of ['Main Game', 'DLC', 'Expansion', 'Remake']; track t) {
-          <div class="filter-box">
+        @for (
+          t of [
+            'Game',
+            'Remake',
+            'Remaster',
+            'Expanded',
+            'Bundle',
+            'DLC',
+            'Expansion',
+            'Port',
+            'Fangame',
+          ];
+          track t
+        ) {
+          <div
+            class="filter-box"
+            [class.active]="selectedTypes().includes(t)"
+            (click)="toggleFilter(selectedTypes, t, false)"
+          >
             {{ t }}
           </div>
         }
       </div>
     </div>
-    <div class="mb-3">
-      <small>Company</small>
-      <div class="filter-boxes mt-2">
-        @for (c of ['Nintendo', 'Sony', 'Microsoft', 'Ubisoft']; track c) {
-          <div class="filter-box">
-            {{ c }}
-          </div>
-        }
+    <button class="btn btn-sm btn-outline-light w-100 mt-3" (click)="resetFilters()">
+      Reset filters
+    </button>
+  </div>
+
+  <!-- GAME INFORMATION SIDEBAR -->
+  <div class="gameinfo-sidebar" [class.open]="gameOpen()">
+    @if (selectedGame()) {
+      <div class="game-hero" [style.height.%]="35">
+        <ng-container *ngFor="let img of images(); let i = index">
+          <img [src]="img" [class.active]="i === currentImageIndex()" />
+        </ng-container>
+        <div class="overlay"></div>
+        <div class="hero-content">
+          <span
+            class="game-tag big"
+            [ngClass]="'tag-' + getGameTypeLabel(selectedGame()?.game_type).toLowerCase()"
+          >
+            {{ getGameTypeLabel(selectedGame()?.game_type) }}
+          </span>
+          <h4>{{ selectedGame()?.name }}</h4>
+          <p class="platform-year">
+            {{ selectedGame()?.main_platform?.name || 'Unknown' }} •
+            {{
+              selectedGame()?.first_release_date
+                ? (selectedGame()?.first_release_date * 1000 | date: 'dd-MM-yyyy')
+                : '----'
+            }}
+          </p>
+          <p class="company">
+            {{ selectedGame()?.involved_companies?.[0]?.company?.name || '---' }}
+          </p>
+          <p class="rating">
+            {{
+              selectedGame()?.rating ? (selectedGame()?.rating | number: '1.0-0') + '/100' : '---'
+            }}
+          </p>
+        </div>
       </div>
-    </div>
-    <button class="btn btn-sm btn-outline-light w-100 mt-3">Reset filters</button>
+      <div class="game-body">
+        <p class="summary">
+          {{ getShortSummary(selectedGame()?.summary) }}
+        </p>
+        <div class="selectors">
+          <div>
+            <small>Region</small>
+            <select
+              class="form-select form-select-sm"
+              [ngModel]="selectedRegion()"
+              (ngModelChange)="selectedRegion.set($any($event))"
+            >
+              <option>PAL</option>
+              <option>NTSC-U</option>
+              <option>NTSC-J</option>
+              <option>Region Free</option>
+            </select>
+          </div>
+          <div>
+            <small>Format</small>
+            <select
+              class="form-select form-select-sm"
+              [ngModel]="selectedFormat()"
+              (ngModelChange)="selectedFormat.set($any($event))"
+            >
+              <option>Physical</option>
+              <option>Digital</option>
+            </select>
+          </div>
+        </div>
+        <button
+          class="btn btn-success w-100 mt-3"
+          (click)="addToCollection(selectedGame(), selectedRegion(), selectedFormat())"
+        >
+          Add to collection
+        </button>
+        <div class="collection-confirmation" *ngIf="showConfirmation()">Added to collection</div>
+      </div>
+    }
   </div>
 
   <!-- NORMAL PAGE -->
-  <div class="d-flex justify-content-end mb-3">
-    <button class="btn btn-outline-danger btn-sm" (click)="logout()">Logout</button>
-  </div>
+
   <div
     class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3"
   >
-    <div>
-      <h2 class="mb-2">
-        Home <span class="text-muted fs-6 align-middle">({{ gameCount() }} games)</span>
-      </h2>
-      <p class="text-muted crud-description mb-2">
-        Manage your video game collection. Add games with platform and regional version, edit or
-        delete them, and store everything on the server.
-      </p>
-    </div>
-    <button class="btn btn-success align-self-md-center" (click)="toggleForm()">
-      {{ showForm() ? 'Close' : 'Add game' }}
-    </button>
-  </div>
-  @if (showForm()) {
-    <form [formGroup]="form" (ngSubmit)="addGame()" class="card shadow-sm p-3 mb-4">
-      <div class="row g-3">
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Name</label>
-          <input formControlName="name" class="form-control" />
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Platform</label>
-          @if (platforms().length > 0) {
-            <select
-              formControlName="platform"
-              class="form-select"
-              (change)="onPlatformChange($any($event.target).value)"
-            >
-              <option value="">Select platform</option>
-              @for (p of platforms(); track p) {
-                <option [value]="p">{{ p }}</option>
-              }
-            </select>
-          } @else {
-            <input formControlName="platform" class="form-control" />
-          }
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Region</label>
-          <select
-            formControlName="region"
-            class="form-select"
-            (change)="onRegionChange($any($event.target).value)"
-          >
-            <option value="">Select region</option>
-            @for (r of regions(); track r) {
-              <option [value]="r">{{ r }}</option>
-            }
-          </select>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Genre</label>
-          <input formControlName="genre" class="form-control" />
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Release date</label>
-          <input type="date" formControlName="releaseDate" class="form-control" />
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Average price</label>
-          <input type="number" formControlName="avgPrice" class="form-control" />
-        </div>
-        <div class="col-12">
-          <label class="form-label">Image (URL)</label>
-          <input formControlName="image" class="form-control" />
-        </div>
-      </div>
-      <!--<div class="d-flex flex-column flex-md-row gap-2 mt-3">
-        <button
-          type="button"
-          class="btn btn-outline-info"
-          (click)="autoFillFromIGDB()"
-          [disabled]="!form.value.name"
-        >
-          Autofill IGDB
-        </button>
-        <button
-          type="button"
-          class="btn btn-outline-warning"
-          (click)="fetchEbayPrice()"
-          [disabled]="!form.value.name || !form.value.platform || !form.value.region"
-        >
-          Get price from eBay
-        </button>
-        <button class="btn btn-primary ms-md-auto" [disabled]="form.invalid">Save</button>
-      </div>-->
-    </form>
-  }
-
-  <!-- TABLA -->
-
-  <div class="table-responsive">
-    <table class="table table-striped table-hover align-middle table-sm crud-table">
-      <thead class="table-dark">
-        <tr>
-          <th (click)="toggleSort('id')" class="sortable text-center">
-            ID
-            @if (sortBy() === 'id') {
-              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
-            }
-          </th>
-
-          <th (click)="toggleSort('name')" class="sortable">
-            Name
-            @if (sortBy() === 'name') {
-              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
-            }
-          </th>
-
-          <th class="d-none d-md-table-cell">Platform</th>
-          <th class="d-none d-md-table-cell text-center">Region</th>
-          <th class="d-none d-md-table-cell">Genre</th>
-
-          <th
-            class="d-none d-md-table-cell sortable text-center"
-            (click)="toggleSort('releaseDate')"
-          >
-            Release
-            @if (sortBy() === 'releaseDate') {
-              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
-            }
-          </th>
-
-          <th class="sortable text-center" (click)="toggleSort('avgPrice')">
-            Price
-            @if (sortBy() === 'avgPrice') {
-              <span class="sort-arrow">{{ sortDesc() ? '↓' : '↑' }}</span>
-            }
-          </th>
-          <th class="text-center">Img</th>
-          <th class="text-center"></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (game of sortedGames(); track game.id) {
-          <tr>
-            <td class="text-center">{{ game.id }}</td>
-
-            <td class="game-cell">
-              <div class="game-title">
-                {{ game.name }}
-              </div>
-
-              <div class="game-meta d-md-none">{{ game.platform }} • {{ game.region }}</div>
-
-              <div class="game-meta d-md-none">
-                {{ game.genre }}
-              </div>
-
-              <div class="game-meta d-md-none">
-                {{ game.releaseDate | date: 'dd-MM-yyyy' }}
-              </div>
-            </td>
-
-            <td class="d-none d-md-table-cell">{{ game.platform }}</td>
-
-            <td class="d-none d-md-table-cell text-center">{{ game.region }}</td>
-
-            <td class="d-none d-md-table-cell">{{ game.genre }}</td>
-
-            <td class="d-none d-md-table-cell">
-              {{ game.releaseDate | date: 'dd/MM/yyyy' }}
-            </td>
-
-            <td class="price-cell text-center">{{ game.avgPrice }}€</td>
-
-            <td class="text-center">
-              <img [src]="game.image" class="game-image" alt="{{ game.name }}" />
-            </td>
-
-            <td class="text-center actions-cell">
-              <button class="btn btn-warning btn-sm me-1" (click)="editGame(game)">Edit</button>
-              <button class="btn btn-danger btn-sm" (click)="deleteGame(game.id!)">Delete</button>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <h2 class="mb-2">Home</h2>
   </div>
 
   <!--  GRID DE JUEGOS -->
 
-  <div class="mb-3">
+  <div class="search-container mb-3">
     <input
       type="text"
       class="form-control"
       placeholder="Search games..."
-      (input)="onSearch($any($event.target).value)"
+      (input)="onInputChange($any($event.target).value)"
     />
+    <button class="apply-btn" (click)="applyFilters()">Apply</button>
+    <button class="filters-btn" (click)="filtersOpen.update(v => !v)">Advanced</button>
+  </div>
+  <div
+    class="active-filters"
+    *ngIf="selectedPlatforms().length || selectedYears().length || selectedTypes().length"
+  >
+    @for (p of selectedPlatforms(); track p) {
+      <span class="active-tag">
+        {{ p }}
+        <span (click)="toggleFilter(selectedPlatforms, p)">X</span>
+      </span>
+    }
+
+    @for (y of selectedYears(); track y) {
+      <span class="active-tag">
+        {{ y }}
+        <span (click)="toggleFilter(selectedYears, y)">X</span>
+      </span>
+    }
+
+    @for (t of selectedTypes(); track t) {
+      <span class="active-tag">
+        {{ t }}
+        <span (click)="toggleFilter(selectedTypes, t)">X</span>
+      </span>
+    }
   </div>
   <div class="games-grid mt-4">
     @for (game of isSearching() ? searchResults() : gamesExplore(); track game.id) {
-      <div class="game-card">
+      <div class="game-card" (click)="openGameInfo(game); $event.stopPropagation()">
+        <span class="game-tag" [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()">
+          {{ getGameTypeLabel(game.game_type) }}
+        </span>
         <img
-          [src]="'https:' + game.cover?.url.replace('t_thumb', 't_cover_big_2x')"
+          [src]="
+            game.cover?.url
+              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
+              : 'assets/no-image.png'
+          "
           class="game-poster"
         />
-
         <div class="game-info">
-          <h6>{{ game.name }}</h6>
-          <p>{{ game.platforms?.[0]?.name || 'Unknown platform' }}</p>
+          <h6>{{ game.name || 'Unknown' }}</h6>
+          <p>{{ game.main_platform?.name || 'Unknown platform' }}</p>
           <p>
             {{ game.first_release_date ? (game.first_release_date * 1000 | date: 'yyyy') : '----' }}
           </p>

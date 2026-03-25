@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -11,6 +11,14 @@ export class AuthService {
   private api = 'http://localhost:3000/api/auth';
 
   token = signal<string | null>(localStorage.getItem('token'));
+  userEmail = signal<string | null>(localStorage.getItem('email'));
+
+  userName = computed(() => {
+    const email = this.userEmail();
+    return email ? email.split('@')[0] : null;
+  });
+
+  isLoggedIn = computed(() => !!this.token());
 
   async login(email: string, password: string) {
     const response: any = await firstValueFrom(
@@ -18,7 +26,10 @@ export class AuthService {
     );
 
     localStorage.setItem('token', response.token);
+    localStorage.setItem('email', email);
+
     this.token.set(response.token);
+    this.userEmail.set(email);
 
     return response;
   }
@@ -33,10 +44,8 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('email');
     this.token.set(null);
-  }
-
-  isLoggedIn() {
-    return !!this.token();
+    this.userEmail.set(null);
   }
 }
