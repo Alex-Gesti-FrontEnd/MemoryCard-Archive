@@ -1,8 +1,17 @@
 .auth-wrapper {
   flex-direction: row;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
 
   @media (max-width: 768px) {
     flex-direction: column;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    pointer-events: none;
   }
 }
 
@@ -10,4 +19,50 @@
   width: min(420px, 35vw);
   min-width: 280px;
   flex: 1 1 auto;
+  background: rgba(0, 120, 255, 0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  h2 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    color: #fff;
+    text-align: left;
+    text-shadow: 0 2px 6px rgba(0, 180, 255, 0.5);
+  }
+
+  input.form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 180, 255, 0.3);
+    border-radius: 0.5rem;
+    color: #fff;
+    padding: 0.6rem 1rem;
+    transition: all 0.2s ease;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #00aaff;
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 8px rgba(0, 170, 255, 0.5);
+    }
+  }
+
+  button {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 170, 255, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 180, 255, 0.5);
+    }
+  }
 }

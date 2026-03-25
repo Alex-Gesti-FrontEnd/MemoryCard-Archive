@@ -169,7 +169,7 @@
   <div
     class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3"
   >
-    <h2 class="mb-2">Home</h2>
+    <h2 class="page-title mb-2">Search Games</h2>
   </div>
 
   <!--  GRID DE JUEGOS -->
@@ -181,8 +181,10 @@
       placeholder="Search games..."
       (input)="onInputChange($any($event.target).value)"
     />
-    <button class="apply-btn" (click)="applyFilters()">Apply</button>
-    <button class="filters-btn" (click)="filtersOpen.update(v => !v)">Advanced</button>
+    <button class="btn-collection apply-btn" (click)="applyFilters()">Apply</button>
+    <button class="btn-collection filters-btn" (click)="filtersOpen.update(v => !v)">
+      Advanced
+    </button>
   </div>
   <div
     class="active-filters"
@@ -209,37 +211,47 @@
       </span>
     }
   </div>
-  <div class="games-grid mt-4">
-    @for (game of isSearching() ? searchResults() : gamesExplore(); track game.id) {
-      <div class="game-card" (click)="openGameInfo(game); $event.stopPropagation()">
-        <span class="game-tag" [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()">
-          {{ getGameTypeLabel(game.game_type) }}
-        </span>
-        <img
-          [src]="
-            game.cover?.url
-              ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
-              : 'assets/no-image.png'
-          "
-          class="game-poster"
-        />
-        <div class="game-info">
-          <h6>{{ game.name || 'Unknown' }}</h6>
-          <p>{{ game.main_platform?.name || 'Unknown platform' }}</p>
-          <p>
-            {{ game.first_release_date ? (game.first_release_date * 1000 | date: 'yyyy') : '----' }}
-          </p>
+  <div class="games-grid mt-4" [class.animating]="isGridAnimating()">
+    @if (!isUpdating()) {
+      @for (
+        game of isSearching() ? searchResults() : gamesExplore();
+        track game.id + '-' + currentPage()
+      ) {
+        <div class="game-card" (click)="openGameInfo(game); $event.stopPropagation()">
+          <span
+            class="game-tag"
+            [ngClass]="'tag-' + getGameTypeLabel(game.game_type).toLowerCase()"
+          >
+            {{ getGameTypeLabel(game.game_type) }}
+          </span>
+          <img
+            [src]="
+              game.cover?.url
+                ? 'https:' + game.cover.url.replace('t_thumb', 't_cover_big_2x')
+                : 'assets/no-image.png'
+            "
+            class="game-poster"
+          />
+          <div class="game-info">
+            <h6>{{ game.name || 'Unknown' }}</h6>
+            <p>{{ game.main_platform?.name || 'Unknown platform' }}</p>
+            <p>
+              {{
+                game.first_release_date ? (game.first_release_date * 1000 | date: 'yyyy') : '----'
+              }}
+            </p>
+          </div>
         </div>
-      </div>
+      }
     }
   </div>
   <div class="pagination-container my-4">
-    <button class="page-btn" (click)="prevPage()">←</button>
+    <button class="page-btn prev-btn" (click)="prevPage()">←</button>
     @for (p of visiblePages(); track p) {
       <button class="page-btn" [class.active]="p === currentPage()" (click)="goToPage(p)">
         {{ p }}
       </button>
     }
-    <button class="page-btn" (click)="nextPage()">→</button>
+    <button class="page-btn next-btn" (click)="nextPage()">→</button>
   </div>
 </section>

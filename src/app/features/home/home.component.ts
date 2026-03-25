@@ -30,6 +30,9 @@ export class HomeComponent implements OnInit {
 
   searchTotal = signal(0);
 
+  isUpdating = signal(false);
+  isGridAnimating = signal(true);
+
   filtersOpen = signal(false);
   selectedPlatforms = signal<string[]>([]);
   selectedYears = signal<string[]>([]);
@@ -60,6 +63,10 @@ export class HomeComponent implements OnInit {
     }
 
     this.loadGames(1);
+
+    setTimeout(() => {
+      this.isGridAnimating.set(false);
+    }, 50);
   }
 
   async loadGames(page: number) {
@@ -74,7 +81,7 @@ export class HomeComponent implements OnInit {
         }),
       );
 
-      this.gamesExplore.set(data.results || []);
+      this.updateGrid(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
       this.currentPage.set(page);
     } catch (err) {
@@ -139,9 +146,19 @@ export class HomeComponent implements OnInit {
     this.searchTerm.set(value);
 
     if (!value || value.length < 2) {
+      const data = await firstValueFrom(
+        this.gamesService.getPopularGames(1, {
+          platforms: this.selectedPlatforms(),
+          years: this.selectedYears(),
+          types: this.selectedTypes(),
+        }),
+      );
+
       this.isSearching.set(false);
-      this.searchTotal.set(0);
-      this.loadGames(1);
+      this.updateGrid(data.results || []);
+      this.searchTotal.set(Number(data.total || 0));
+      this.currentPage.set(1);
+
       return;
     }
 
@@ -157,7 +174,7 @@ export class HomeComponent implements OnInit {
         }),
       );
 
-      this.searchResults.set(data.results || []);
+      this.updateGrid(data.results || [], true);
       this.searchTotal.set(Number(data.total || 0));
     } catch (err) {
       console.error(err);
@@ -173,8 +190,32 @@ export class HomeComponent implements OnInit {
       }),
     );
 
-    this.searchResults.set(data.results || []);
+    this.updateGrid(data.results || [], true);
     this.currentPage.set(page);
+  }
+
+  triggerGridAnimation() {
+    this.isGridAnimating.set(true);
+
+    setTimeout(() => {
+      this.isGridAnimating.set(false);
+    }, 300);
+  }
+
+  updateGrid(data: any[], isSearch = false) {
+    this.isUpdating.set(true);
+    this.isGridAnimating.set(false);
+
+    if (isSearch) {
+      this.searchResults.set(data);
+    } else {
+      this.gamesExplore.set(data);
+    }
+
+    setTimeout(() => {
+      this.isUpdating.set(false);
+      this.triggerGridAnimation();
+    }, 10);
   }
 
   toggleFilter(signalRef: any, value: string, autoSearch = false) {
@@ -219,14 +260,13 @@ export class HomeComponent implements OnInit {
           this.gamesService.searchIGDB(this.searchTerm(), 1, filters),
         );
 
-        this.searchResults.set(data.results || []);
+        this.updateGrid(data.results || [], true);
         this.searchTotal.set(Number(data.total || 0));
       } else {
-        this.isSearching.set(false);
-
         const data = await firstValueFrom(this.gamesService.getPopularGames(1, filters));
 
-        this.gamesExplore.set(data.results || []);
+        this.isSearching.set(false);
+        this.updateGrid(data.results || []);
         this.searchTotal.set(Number(data.total || 0));
       }
     } catch (err) {

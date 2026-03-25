@@ -1,6 +1,6 @@
 <section class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>My Collection</h2>
+    <h2 class="page-title">My Collection</h2>
     <div class="collection-stats d-flex gap-3 align-items-center">
       <div
         class="stat-tag total"
@@ -39,7 +39,7 @@
   <input
     type="text"
     class="form-control mb-3"
-    placeholder="Search game..."
+    placeholder="Search games..."
     [ngModel]="searchTerm()"
     (ngModelChange)="searchTerm.set($event)"
   />
