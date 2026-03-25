@@ -24,7 +24,6 @@ export class GamesService {
   addGame(game: GameModel): Promise<GameModel> {
     return firstValueFrom(this.http.post<GameModel>(this.apiUrl, game)).then((newGame) => {
       this.games.update((old) => [...old, newGame]);
-      console.log('Enviando juego:', newGame);
       return newGame;
     });
   }

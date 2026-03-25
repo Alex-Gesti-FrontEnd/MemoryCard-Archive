@@ -74,8 +74,6 @@ router.get('/igdb/search', async (req, res) => {
     const limit = 50;
     const offset = (Number(page) - 1) * limit;
 
-    console.log('FILTERS:', req.query);
-
     const data = await searchGameByName(name, limit, offset, {
       platforms,
       years,

@@ -149,12 +149,6 @@ export class HomeComponent implements OnInit {
       this.isSearching.set(true);
       this.currentPage.set(1);
 
-      console.log('FRONT FILTERS:', {
-        platforms: this.selectedPlatforms(),
-        years: this.selectedYears(),
-        types: this.selectedTypes(),
-      });
-
       const data = await firstValueFrom(
         this.gamesService.searchIGDB(value, 1, {
           platforms: this.selectedPlatforms(),
@@ -320,7 +314,7 @@ export class HomeComponent implements OnInit {
       return short.slice(0, 500) + '...';
     }
 
-    return short + '.';
+    return short;
   }
 
   async addToCollection(game: any, region: string, format: string) {

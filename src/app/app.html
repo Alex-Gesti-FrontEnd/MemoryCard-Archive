@@ -1,5 +1,13 @@
 <app-navbar></app-navbar>
-
+<div
+  class="cube"
+  *ngFor="let cube of cubes"
+  [style.left.px]="cube.x"
+  [style.--y.px]="cube.y"
+  [style.animation-delay.s]="cube.delay"
+  [style.animation-duration.s]="cube.duration"
+  [style.--rotation-speed]="cube.rotationSpeed * cube.rotationDir + 'deg'"
+></div>
 <main class="container mt-4">
   <router-outlet></router-outlet>
 </main>

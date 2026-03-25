@@ -161,9 +161,6 @@ export async function searchGameByName(name, limit = 50, offset = 0, filters = {
     main_platform: getMainPlatform(g),
   }));
 
-  console.log('FILTERS:', filters);
-  console.log('WHERE:', whereClause);
-
   return {
     results: mappedResults,
     total: countData.count || 0,
