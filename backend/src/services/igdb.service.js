@@ -23,11 +23,10 @@ async function getAccessToken() {
   return cachedToken;
 }
 
-export async function getPopularGames(limit = 50, offset = 0, filters = {}) {
+export async function getPopularGames(limit = 50, offset = 0) {
   const token = await getAccessToken();
-  const now = Math.floor(Date.now() / 1000);
 
-  const whereClause = buildWhereClause(filters, now);
+  const now = Math.floor(Date.now() / 1000);
 
   const response = await fetch('https://api.igdb.com/v4/games', {
     method: 'POST',
@@ -43,7 +42,13 @@ export async function getPopularGames(limit = 50, offset = 0, filters = {}) {
         platforms.name,
         game_type;
 
-      where ${whereClause};
+      where 
+        cover != null
+        & first_release_date != null
+        & first_release_date <= ${now}
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
 
       sort first_release_date desc;
 
@@ -61,7 +66,13 @@ export async function getPopularGames(limit = 50, offset = 0, filters = {}) {
       Authorization: `Bearer ${token}`,
     },
     body: `
-      where ${whereClause};
+      where 
+        cover != null
+        & first_release_date != null
+        & first_release_date <= ${now}
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
     `,
   });
 
@@ -73,11 +84,9 @@ export async function getPopularGames(limit = 50, offset = 0, filters = {}) {
   };
 }
 
-export async function searchGameByName(name, limit = 50, offset = 0, filters = {}) {
+export async function searchGameByName(name, limit = 50, offset = 0) {
   const token = await getAccessToken();
   const now = Math.floor(Date.now() / 1000);
-
-  const whereClause = buildWhereClause(filters, now);
 
   const response = await fetch('https://api.igdb.com/v4/games', {
     method: 'POST',
@@ -95,7 +104,13 @@ export async function searchGameByName(name, limit = 50, offset = 0, filters = {
 
       search "${name}";
 
-      where ${whereClause};
+      where 
+        first_release_date != null
+        & first_release_date <= ${now}
+        & cover != null
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
 
       limit ${limit};
       offset ${offset};
@@ -112,7 +127,14 @@ export async function searchGameByName(name, limit = 50, offset = 0, filters = {
     },
     body: `
       search "${name}";
-      where ${whereClause};
+
+      where 
+        first_release_date != null
+        & first_release_date <= ${now}
+        & cover != null
+        & game_type != 5
+        & game_type != 6
+        & game_type != 7;
     `,
   });
 
@@ -122,37 +144,4 @@ export async function searchGameByName(name, limit = 50, offset = 0, filters = {
     results,
     total: countData.count || 0,
   };
-}
-
-function buildWhereClause(filters, now) {
-  let where = `
-    cover != null
-    & first_release_date != null
-    & first_release_date <= ${now}
-    & game_type != 5
-    & game_type != 6
-    & game_type != 7
-  `;
-
-  if (filters.platforms.length) {
-    where += ` & platforms = (${filters.platforms.join(',')})`;
-  }
-
-  if (filters.genres.length) {
-    where += ` & genres = (${filters.genres.join(',')})`;
-  }
-
-  if (filters.types.length) {
-    where += ` & game_type = (${filters.types.join(',')})`;
-  }
-
-  if (filters.years.length) {
-    const year = filters.years[0];
-    const start = new Date(`${year}-01-01`).getTime() / 1000;
-    const end = new Date(`${year}-12-31`).getTime() / 1000;
-
-    where += ` & first_release_date >= ${start} & first_release_date <= ${end}`;
-  }
-
-  return where;
 }

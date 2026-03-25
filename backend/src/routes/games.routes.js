@@ -50,15 +50,8 @@ router.get('/igdb/popular', async (req, res) => {
     const limit = 50;
     const offset = (page - 1) * limit;
 
-    const filters = {
-      platforms: req.query.platforms?.split(',') || [],
-      genres: req.query.genres?.split(',') || [],
-      years: req.query.years?.split(',') || [],
-      types: req.query.types?.split(',') || [],
-      companies: req.query.companies?.split(',') || [],
-    };
+    const games = await getPopularGames(limit, offset);
 
-    const games = await getPopularGames(limit, offset, filters);
     res.json(games);
   } catch (error) {
     console.error(error);
@@ -72,20 +65,12 @@ router.get('/igdb/popular', async (req, res) => {
 // Route to search for a game by name in IGDB
 router.get('/igdb/search', async (req, res) => {
   try {
-    const { name, page = 1 } = req.query;
+    const { name, page } = req.query;
 
     const limit = 50;
     const offset = (Number(page) - 1) * limit;
 
-    const filters = {
-      platforms: req.query.platforms?.split(',') || [],
-      genres: req.query.genres?.split(',') || [],
-      years: req.query.years?.split(',') || [],
-      types: req.query.types?.split(',') || [],
-      companies: req.query.companies?.split(',') || [],
-    };
-
-    const data = await searchGameByName(name, limit, offset, filters);
+    const data = await searchGameByName(name, limit, offset);
 
     res.json(data);
   } catch (error) {
