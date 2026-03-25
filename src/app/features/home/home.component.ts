@@ -32,7 +32,6 @@ export class HomeComponent implements OnInit {
 
   filtersOpen = signal(false);
   selectedPlatforms = signal<string[]>([]);
-  selectedGenres = signal<string[]>([]);
   selectedYears = signal<string[]>([]);
   selectedTypes = signal<string[]>([]);
 
@@ -67,7 +66,13 @@ export class HomeComponent implements OnInit {
     try {
       this.loading.set(true);
 
-      const data = await firstValueFrom(this.gamesService.getPopularGames(page));
+      const data = await firstValueFrom(
+        this.gamesService.getPopularGames(page, {
+          platforms: this.selectedPlatforms(),
+          years: this.selectedYears(),
+          types: this.selectedTypes(),
+        }),
+      );
 
       this.gamesExplore.set(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
@@ -126,6 +131,10 @@ export class HomeComponent implements OnInit {
     return pages;
   });
 
+  onInputChange(value: string) {
+    this.searchTerm.set(value);
+  }
+
   async onSearch(value: string) {
     this.searchTerm.set(value);
 
@@ -138,10 +147,21 @@ export class HomeComponent implements OnInit {
 
     try {
       this.isSearching.set(true);
-
       this.currentPage.set(1);
 
-      const data = await firstValueFrom(this.gamesService.searchIGDB(value, 1));
+      console.log('FRONT FILTERS:', {
+        platforms: this.selectedPlatforms(),
+        years: this.selectedYears(),
+        types: this.selectedTypes(),
+      });
+
+      const data = await firstValueFrom(
+        this.gamesService.searchIGDB(value, 1, {
+          platforms: this.selectedPlatforms(),
+          years: this.selectedYears(),
+          types: this.selectedTypes(),
+        }),
+      );
 
       this.searchResults.set(data.results || []);
       this.searchTotal.set(Number(data.total || 0));
@@ -151,10 +171,85 @@ export class HomeComponent implements OnInit {
   }
 
   async searchPage(page: number) {
-    const data = await firstValueFrom(this.gamesService.searchIGDB(this.searchTerm(), page));
+    const data = await firstValueFrom(
+      this.gamesService.searchIGDB(this.searchTerm(), page, {
+        platforms: this.selectedPlatforms(),
+        years: this.selectedYears(),
+        types: this.selectedTypes(),
+      }),
+    );
 
     this.searchResults.set(data.results || []);
     this.currentPage.set(page);
+  }
+
+  toggleFilter(signalRef: any, value: string, autoSearch = false) {
+    const current = signalRef();
+
+    if (current.includes(value)) {
+      signalRef.set(current.filter((v: string) => v !== value));
+    } else {
+      signalRef.set([...current, value]);
+    }
+
+    if (autoSearch && this.searchTerm()) {
+      this.triggerSearch();
+    } else if (!this.searchTerm()) {
+      this.currentPage.set(1);
+      this.loadGames(1);
+    }
+  }
+
+  triggerSearch() {
+    if (this.searchTerm()) {
+      this.onSearch(this.searchTerm());
+    } else {
+      this.loadGames(1);
+    }
+  }
+
+  async applyFilters() {
+    const filters = {
+      platforms: this.selectedPlatforms(),
+      years: this.selectedYears(),
+      types: this.selectedTypes(),
+    };
+
+    this.currentPage.set(1);
+
+    try {
+      if (this.searchTerm()) {
+        this.isSearching.set(true);
+
+        const data = await firstValueFrom(
+          this.gamesService.searchIGDB(this.searchTerm(), 1, filters),
+        );
+
+        this.searchResults.set(data.results || []);
+        this.searchTotal.set(Number(data.total || 0));
+      } else {
+        this.isSearching.set(false);
+
+        const data = await firstValueFrom(this.gamesService.getPopularGames(1, filters));
+
+        this.gamesExplore.set(data.results || []);
+        this.searchTotal.set(Number(data.total || 0));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  resetFilters() {
+    this.selectedPlatforms.set([]);
+    this.selectedYears.set([]);
+    this.selectedTypes.set([]);
+
+    if (this.searchTerm()) {
+      this.onSearch(this.searchTerm());
+    } else {
+      this.loadGames(1);
+    }
   }
 
   openGameInfo(game: any) {

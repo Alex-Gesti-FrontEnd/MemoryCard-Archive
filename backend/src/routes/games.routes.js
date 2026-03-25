@@ -45,13 +45,18 @@ const router = express.Router();
 // Route to search for popular games in IGDB
 router.get('/igdb/popular', async (req, res) => {
   try {
-    const page = Number(req.query.page) || 1;
+    const { page, platforms, years, types } = req.query;
+
     const limit = 50;
-    const offset = (page - 1) * limit;
+    const offset = (Number(page) - 1) * limit;
 
-    const games = await getPopularGames(limit, offset);
+    const data = await getPopularGames(limit, offset, {
+      platforms,
+      years,
+      types,
+    });
 
-    res.json(games);
+    res.json(data);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -64,12 +69,18 @@ router.get('/igdb/popular', async (req, res) => {
 // Route to search for a game by name in IGDB
 router.get('/igdb/search', async (req, res) => {
   try {
-    const { name, page } = req.query;
+    const { name, page, platforms, years, types } = req.query;
 
     const limit = 50;
     const offset = (Number(page) - 1) * limit;
 
-    const data = await searchGameByName(name, limit, offset);
+    console.log('FILTERS:', req.query);
+
+    const data = await searchGameByName(name, limit, offset, {
+      platforms,
+      years,
+      types,
+    });
 
     res.json(data);
   } catch (error) {
@@ -78,6 +89,16 @@ router.get('/igdb/search', async (req, res) => {
       message: 'IGDB error',
       error: error.message,
     });
+  }
+});
+
+// Route for GET platforms from IGDB
+router.get('/igdb/platforms', async (req, res) => {
+  try {
+    const data = await getPlatforms();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: 'Platforms error' });
   }
 });
 

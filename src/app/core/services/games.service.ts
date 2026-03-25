@@ -40,15 +40,31 @@ export class GamesService {
     this.games.update((list) => list.filter((g) => g.id !== id));
   }
 
-  getPopularGames(page: number) {
-    return this.http.get<{ results: any[]; total: number }>(
-      `${this.apiUrl}/igdb/popular?page=${page}`,
-    );
+  getPopularGames(page: number, filters?: any) {
+    let params: any = { page };
+
+    if (filters) {
+      if (filters.platforms?.length) params.platforms = filters.platforms.join(',');
+      if (filters.years?.length) params.years = filters.years.join(',');
+      if (filters.types?.length) params.types = filters.types.join(',');
+    }
+
+    return this.http.get<{ results: any[]; total: number }>(`${this.apiUrl}/igdb/popular`, {
+      params,
+    });
   }
 
-  searchIGDB(name: string, page: number = 1) {
+  searchIGDB(name: string, page: number = 1, filters?: any) {
+    let params: any = { name, page };
+
+    if (filters) {
+      if (filters.platforms?.length) params.platforms = filters.platforms.join(',');
+      if (filters.years?.length) params.years = filters.years.join(',');
+      if (filters.types?.length) params.types = filters.types.join(',');
+    }
+
     return this.http.get<{ results: any[]; total: number }>(`${this.apiUrl}/igdb/search`, {
-      params: { name, page },
+      params,
     });
   }
 }
