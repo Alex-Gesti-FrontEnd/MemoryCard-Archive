@@ -16,6 +16,7 @@ app.use('/api/reminders', remindersRouter);
 app.use('/api/auth', authRouter);
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'API backend funcionando' }));
+app.get('/ping', (req, res) => res.send('pong'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API arrancada en ${PORT}`));
