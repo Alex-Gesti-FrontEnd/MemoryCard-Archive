@@ -1,16 +1,14 @@
-# 8.-Inprocode-Angular
+# MemoryCard Archive
 
-## 📄 Descripción - Enunciado del ejercicio
+## 📄 Descripción
 
 Este proyecto es una aplicación web desarrollada con **Angular y Node.js (Express)** que permite **gestionar una colección de videojuegos**, consultar información externa y analizar precios de mercado a tiempo real.
 
 La aplicación permite al usuario:
 
-- Registrar videojuegos en una base de datos local.
 - Obtener información de juegos desde [**IGDB**](https://www.igdb.com).
-- Analizar precios reales de mercado mediante [**eBay**](https://www.ebay.es/?mkcid=1&mkrid=1185-53479-19255-0&siteid=186&campid=5337315324&customid=gxesebayebaysd&toolid=10001&mkevt=1).
+- Organizar los juegos en su base de datos propia privada.
 - Localizar tiendas cercanas que venden videojuegos.
-- Planificar recordatorios relacionados con su colección.
 
 El objetivo principal del proyecto es practicar una **arquitectura Full Stack moderna**, integrando un **frontend en Angular** con un **backend en Node.js**, utilizando múltiples **APIs externas**, base de datos **MySQL**, y visualización avanzada de datos.
 
@@ -20,50 +18,27 @@ El objetivo principal del proyecto es practicar una **arquitectura Full Stack mo
 
 ### Gestión de videojuegos
 
-- Crear videojuegos en la base de datos local.
-- Editar información de un juego.
+- Buscar videojuegos en la base de datos.
 - Eliminar juegos.
-- Visualizar toda la colección registrada.
-- Guardar información como:
-  - Nombre.
-  - Plataforma.
-  - Región.
-  - Género.
-  - Fecha de lanzamiento.
-  - Precio medio de mercado.
-  - Imagen.
+- Visualizar, organizar y controlar toda la colección registrada.
+- Guardar información completa del videojuego.
+- Guardar el estado en el cual el jugador se encuentra y que versión de juego tiene.
 
 ### Búsqueda de información externa (IGDB)
 
 La aplicación puede buscar información de videojuegos mediante la API de **IGDB**.
-
-Datos obtenidos automáticamente:
-
-- Nombre del juego.
-- Género.
-- Plataforma.
-- Fecha de lanzamiento.
-- Imagen del juego.
-
 Esto permite **completar automáticamente información del juego** al añadirlo a la colección.
 
-### Análisis de precios de mercado (eBay)
+### Control de colección propia
 
-El backend consulta **eBay Marketplace API** para analizar precios reales.
+El sistema puede guardar y mostrar:
 
-Funciones:
+- Videojuego registrado.
+- Versión registrada.
+- Formato del videojuego.
+- Información del videojuego, desde en la consola se lanzó hasta rating de este propio.
 
-- Cálculo del **precio medio (mediana)** de un juego.
-- Conversión automática de divisas a **EUR**.
-- Análisis de **hasta 800 anuncios de eBay**.
-
-La aplicación puede mostrar:
-
-- Precio medio estimado.
-- Número de anuncios analizados.
-- Histograma de precios.
-
-Esto permite saber **cuánto vale realmente un juego en el mercado actual**.
+Esto ayuda a **controlar y conocer la colección del usuario**.
 
 ### Localización de tiendas cercanas
 
@@ -101,34 +76,6 @@ Se calcula:
 - Tiempo estimado.
 - Ruta mostrada en el mapa.
 
-### Sistema de recordatorios
-
-La aplicación incluye un sistema de **recordatorios con calendario**.
-
-Permite:
-
-- Crear recordatorios.
-- Asociarlos a videojuegos.
-- Añadir notas.
-- Visualizarlos en calendario.
-
-Ejemplos:
-
-- Comprar un juego.
-- Evento gaming.
-- Lanzamiento de un juego.
-- Recordatorio de colección.
-
-### Visualización de datos
-
-El sistema puede mostrar:
-
-- Distribución de precios de eBay.
-- Gráficos de mercado.
-- Comparación de precios.
-
-Esto ayuda a **analizar el valor real de una colección**.
-
 ---
 
 ## 🏗️ Arquitectura del proyecto
@@ -141,30 +88,39 @@ El proyecto está dividido en **Frontend (Angular)** y **Backend (Node.js)**:
 src/
 ├── app/
 │ ├── core/
+│ │ ├── guards/
+│ │ │ └── auth.guard.ts
+│ │ ├── interceptors/
+│ │ │ └── auth.interceptor.ts
 │ │ ├── models/
 │ │ │ ├── game.model.ts
 │ │ │ └── reminder.model.ts
 │ │ └── services/
-│ │   ├── games.service.ts / spec.ts
-│ │   ├── map.service.ts / spec.ts
-│ │   └── reminder.service.ts / spec.ts
+│ │   ├── auth.service.ts
+│ │   ├── games.service.ts
+│ │   ├── map.service.ts
+│ │   └── reminder.service.ts
 │ ├── features/
-│ │ └── calendar/
-│ │   └── calendar.component.ts / spec.ts / .html / .scss
-│ │ └── graphics/
-│ │   └── graphics.component.ts / spec.ts / .html / .scss
-│ │ └── home/
-│ │   └── home.component.ts / spec.ts / .html / .scss
+│ │ ├── calendar/
+│ │ │ └── calendar.component.ts  / .html / .scss
+│ │ ├── collection/
+│ │ │ └── collection.component.ts / .html / .scss
+│ │ ├── home/
+│ │ │ └── home.component.ts / .html / .scss
+│ │ ├── login/
+│ │ │ └── login.component.ts / .html / .scss
 │ │ └── map/
-│ │   └── map.component.ts / spec.ts / .html / .scss
+│ │   └── map.component.ts / .html / .scss
 │ ├── shared/
 │ │ └── components/
 │ │  └── components/
-│ │   └── navbar.component.ts / .scss / .spec.ts / .html
+│ │   └── navbar.component.ts / .scss / .html
 │ ├── app.routes.ts
 │ ├── app.ts / html / scss
 │ └── app.config.ts
 ├── assets/
+│ ├── logo_icon.png
+│ ├── logo_title.png
 │ ├── marker-icon-2x.png
 │ ├── marker-icon.png
 │ ├── marker-shadow.png
@@ -180,12 +136,14 @@ src/
 ```bash
 backend/
 ├── src/
+│ ├── middleware/
+│ │ └── auth.middleware.js
 │ ├── routes/
+│ │ ├── auth.routes.js
 │ │ ├── games.routes.js
 │ │ └── reminders.routes.js
 │ ├── services/
 │ │ ├── igdb.service.js
-│ │ ├── ebay.service.js
 │ │ ├── geocoding.service.js
 │ │ └── overpass.service.js
 │ ├── db.js
@@ -203,45 +161,53 @@ Tablas principales:
 
 ### games
 
-| Campo       | Tipo    |
-| ----------- | ------- |
-| id          | INT     |
-| name        | VARCHAR |
-| platform    | VARCHAR |
-| region      | VARCHAR |
-| genre       | VARCHAR |
-| releaseDate | DATE    |
-| avgPrice    | FLOAT   |
-| image       | TEXT    |
+| Campo       | Tipo      |
+| ----------- | --------- |
+| id          | INT       |
+| name        | VARCHAR   |
+| platform    | VARCHAR   |
+| region      | VARCHAR   |
+| genre       | VARCHAR   |
+| releaseDate | DATE      |
+| image       | TEXT      |
+| created_at  | TIMESTAMP |
+| status      | ENUM      |
+| format      | ENUM      |
+| game_url    | TEXT      |
+| game_type   | INT       |
+| summary     | TEXT      |
+| rating      | FLOAT     |
+| screenshots | JSON      |
+| artworks    | JSON      |
+| companies   | JSON      |
+| startedAt   | DATE      |
+| completedAt | DATE      |
+| favourite   | INT       |
 
 ---
 
-### reminders
+### users
 
-| Campo  | Tipo    |
-| ------ | ------- |
-| id     | INT     |
-| title  | VARCHAR |
-| date   | DATE    |
-| notes  | TEXT    |
-| gameId | INT     |
+| Campo      | Tipo      |
+| ---------- | --------- |
+| id         | INT       |
+| email      | VARCHAR   |
+| password   | VARCHAR   |
+| created_at | TIMESTAMP |
 
 ---
 
 ## 🎨 Decisiones de diseño
 
-- **Minimalismo visual**
-  - Uso de Bootstrap y SCSS modular para un diseño limpio y legible.
+- **Interfaz temática**
+  - Uso de Bootstrap y SCSS modular para un diseño limpio y legible con un toque de interfaz única.
 
 - **Responsive Design**
-  - Adaptado a móviles y escritorio, con tarjetas flexibles para películas.
+  - Adaptado a móviles y escritorio, con tarjetas flexibles para videojuegos.
 
 - **UX clara**
   - Mensajes de funcionamiento básico del programa.
   - Uso de colores minimalistas para la visualización rápida del usuario.
-
-- **Signals en Angular 20**
-  - Evita suscripciones manuales y optimiza la actualización de vistas.
 
 ---
 
@@ -249,9 +215,7 @@ Tablas principales:
 
 - Dependencia de APIs externas, las cuales **pueden llegar a ser de pago**.
 
-- No hay **autentitación de usuarios**.
-
-- No hay almacenamiento en la nube.
+- Almacenamiento en la nube limitado.
 
 - Precisión de tiendas depende **únicamente** de OpenStreetMap.
 
@@ -259,13 +223,21 @@ Tablas principales:
 
 ## 🚀 Roadmap / Mejoras futuras
 
-- Sistema de **usuarios y autenticación**.
+- **Ventana home** para nuevos usuarios.
 
-- **Listas de colección y organización profunda**.
+- **Ventana FAQS** para resolución de dudas.
 
-- Busqueda de juego en la colección mediante **un buscador**.
+- Creación de **foros** para que los usuarios puedan charlar entre ellos.
 
-- **Mejorar la interfaz** con animaciones y mejora visual.
+- Creación de un **perfil de usuario** propio y customizable.
+
+- Inicio de un **marketplace** regulado y interactivo entre usuarios.
+
+- Mejoras de **organización de colección** en la ventana _Collection_.
+
+- Nuevos **temas** para la web.
+
+- Mejora y depuración de **código** en profundidad.
 
 ---
 
@@ -279,6 +251,7 @@ Tablas principales:
 - SCSS
 - [Bootstrap](https://getbootstrap.com)
 - [FullCalendar](https://fullcalendar.io)
+- [Firebase](https://firebase.google.com/?hl=es-419)
 
 ### Backend
 
@@ -286,12 +259,11 @@ Tablas principales:
 - Express
 - [MySQL](https://www.mysql.com)
 - dotenv
-- CORS
+- [Railway](https://railway.com)
 
 ### APIs externas
 
 - [IGDB API](https://www.igdb.com/api)
-- [eBay Marketplace API](https://developer.ebay.com/develop)
 - OpenStreetMap
 - Overpass API
 - [OSRM Routing API](https://project-osrm.org/docs/v5.24.0/api/#)
@@ -300,7 +272,7 @@ Tablas principales:
 
 ## 📋 Requisitos
 
-Para ejecutar este proyecto se necesita:
+Para ejecutar este proyecto en local se necesita:
 
 - Node.js (v18 o superior)
 - MySQL instalado en tu ordenador.
@@ -323,15 +295,16 @@ Estructura:
 PORT=3000
 
 DB_HOST=localhost
+DB_PORT=tu_puerto
 DB_USER=root
 DB_PASSWORD=tu_password
 DB_NAME=video_games
 
+JWT_SECRET=tu_contraseña_secreta
+
 IGDB_CLIENT_ID=tu_client_id
 IGDB_CLIENT_SECRET=tu_client_secret
 
-EBAY_CLIENT_ID=tu_client_id
-EBAY_CLIENT_SECRET=tu_client_secret
 ```
 
 ---
@@ -341,7 +314,7 @@ EBAY_CLIENT_SECRET=tu_client_secret
 1.  Clona el repositorio o descarga los archivos ZIP:
 
 ```bash
-git clone https://github.com/Alex-Gesti-FrontEnd/8.-Inprocode-Angular
+git clone https://github.com/Alex-Gesti-FrontEnd/MemoryCard-Archive
 ```
 
 2.  Abre la carpeta del proyecto en tu editor de código.
@@ -381,32 +354,45 @@ ng serve
 
 ---
 
-### 🧪 Testing
-
-1. Ejecuta los tests con:
-
-```bash
-npm test
-```
-
-2. La consola del editor de código mostrando los resultados de las pruebas unitarias (éxitos, fallos y logs detallados).
-
----
-
 ## 🖼️ Screenshots
 
 A continuación se mostrará algunas capturas de la aplicación en funcionamiento:
 
-- **Pantalla _Home_**
+- **Pantalla _Login_**
+
+  <p align="center">
+  <img src="src/assets/README/demo-login-neutral.png" alt="Demo 1" width="450"/>
+    </p>
+
+- **Pantalla _Search_**
 
   <p align="center">
   <img src="src/assets/README/demo-home-neutral.png" alt="Demo 1" width="450"/>
     </p>
     
-  - **_Add game_ abierto**
+  - **_Information game_ abierto**
 
       <p align="center">
-      <img src="src/assets/README/demo-home-search.png" alt="Demo 1" width="450"/>
+      <img src="src/assets/README/demo-home-game.png" alt="Demo 1" width="450"/>
+
+    </p>
+  - **_Advance search_ abierto**
+
+    <p align="center">
+    <img src="src/assets/README/demo-home-filters.png" alt="Demo 1" width="450"/>
+
+    </p>
+
+- **Pantalla _Collection_**
+
+  <p align="center">
+  <img src="src/assets/README/demo-col-neutral.png" alt="Demo 1" width="450"/>
+    </p>
+    
+  - **_Game on collection_ abierto**
+
+      <p align="center">
+      <img src="src/assets/README/demo-col-game.png" alt="Demo 1" width="450"/>
 
     </p>
 
@@ -416,74 +402,13 @@ A continuación se mostrará algunas capturas de la aplicación en funcionamient
       <img src="src/assets/README/demo-map-neutral.png" alt="Demo 1" width="450"/>
 </p>
 
-- **Pantalla _Calendar_**
-  - **Mes**
-
-    <p align="center">
-      <img src="src/assets/README/demo-calendar-neutral.png" alt="Demo 1" width="450"/>
-  </p>
-
-  - **Semana**
-
-    <p align="center">
-      <img src="src/assets/README/demo-calendar-week.png" alt="Demo 1" width="450"/>
-  </p>
-
-  - **Día**
-
-    <p align="center">
-      <img src="src/assets/README/demo-calendar-day.png" alt="Demo 1" width="450"/>
-  </p>
-
-  - **Evento de aniversario**
-
-    <p align="center">
-      <img src="src/assets/README/demo-calendar-ann.png" alt="Demo 1" width="450"/>
-  </p>
-
-  - **Añadir evento**
-
-    <p align="center">
-      <img src="src/assets/README/demo-calendar-eventC.png" alt="Demo 1" width="450"/>
-  </p>
-  <p align="center">
-      <img src="src/assets/README/demo-calendar-reminder.png" alt="Demo 1" width="450"/>
-  </p>
-  <p align="center">
-      <img src="src/assets/README/demo-calendar-event.png" alt="Demo 1" width="450"/>
-  </p>
-
-- **Pantalla _Graphics_**
-
-<p align="center">
-      <img src="src/assets/README/demo-graphics-neutral.png" alt="Demo 1" width="450"/>
-</p>
-
-- **Formato móvil**
-
-<p align="center">
-      <img src="src/assets/README/demo-home-mobile.png" alt="Demo 1" width="250"/>
-</p>
-
-<p align="center">
-      <img src="src/assets/README/demo-map-mobile.png" alt="Demo 1" width="250"/>
-</p>
-
-<p align="center">
-      <img src="src/assets/README/demo-calendar-mobile.png" alt="Demo 1" width="250"/>
-</p>
-
-<p align="center">
-      <img src="src/assets/README/demo-graphics-mobile.png" alt="Demo 1" width="250"/>
-</p>
-
 ---
 
 ## 🌐 Demo Online
 
 Puedes probar la aplicación directamente en tu navegador, sin necesidad de instalar nada:
 
-[**Abrir Demo**](https://videogamesdb-36fc5.web.app)
+[**Abrir Demo**](https://memorycard-frontend.web.app)
 
 ---
 
