@@ -18,4 +18,4 @@ app.use('/api/auth', authRouter);
 app.get('/', (req, res) => res.json({ ok: true, message: 'API backend funcionando' }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API arrancada en http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`API arrancada en ${PORT}`));

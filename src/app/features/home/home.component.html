@@ -1,6 +1,7 @@
 <section class="container mt-4">
   <!-- ADVANCE SEARCH SIDEBAR -->
   <div class="filters-sidebar" [class.open]="filtersOpen()">
+    <button class="sidebar-close" (click)="filtersOpen.set(false)">✕</button>
     <h5 class="mb-3">Advanced Search</h5>
     <div class="mb-3">
       <small>Platform</small>
@@ -92,6 +93,7 @@
   <!-- GAME INFORMATION SIDEBAR -->
   <div class="gameinfo-sidebar" [class.open]="gameOpen()">
     @if (selectedGame()) {
+      <button class="sidebar-close" (click)="gameOpen.set(false)">✕</button>
       <div class="game-hero" [style.height.%]="35">
         <ng-container *ngFor="let img of images(); let i = index">
           <img [src]="img" [class.active]="i === currentImageIndex()" />
@@ -193,21 +195,21 @@
     @for (p of selectedPlatforms(); track p) {
       <span class="active-tag">
         {{ p }}
-        <span (click)="toggleFilter(selectedPlatforms, p)">X</span>
+        <span (click)="toggleFilter(selectedPlatforms, p)">✕</span>
       </span>
     }
 
     @for (y of selectedYears(); track y) {
       <span class="active-tag">
         {{ y }}
-        <span (click)="toggleFilter(selectedYears, y)">X</span>
+        <span (click)="toggleFilter(selectedYears, y)">✕</span>
       </span>
     }
 
     @for (t of selectedTypes(); track t) {
       <span class="active-tag">
         {{ t }}
-        <span (click)="toggleFilter(selectedTypes, t)">X</span>
+        <span (click)="toggleFilter(selectedTypes, t)">✕</span>
       </span>
     }
   </div>

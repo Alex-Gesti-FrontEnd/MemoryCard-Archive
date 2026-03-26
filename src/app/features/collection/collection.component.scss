@@ -1,3 +1,10 @@
+.page-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .page-title {
   font-size: 1.8rem;
   font-weight: 700;
@@ -502,7 +509,11 @@
   transition: 0.2s;
 
   &:hover {
-    color: rgb(9, 70, 255);
+    color: rgb(49, 100, 255);
+  }
+
+  &:active {
+    color: rgb(6, 49, 177);
   }
 
   &.prev {
@@ -861,4 +872,128 @@
 
 .completed {
   background: #2ecc71;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-title {
+    font-size: clamp(1rem, 5vw, 1.75rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .collection-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0;
+
+    .stat-tag {
+      font-size: 0.65rem;
+      padding: 3px 6px;
+    }
+  }
+
+  .group-tags {
+    flex-wrap: wrap;
+    gap: 6px;
+
+    .game-tags {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+    }
+  }
+
+  .games-grid {
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 120px));
+  }
+
+  .game-card {
+    aspect-ratio: 1 / 1;
+  }
+
+  .folder-preview {
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    gap: 4px;
+
+    &.big {
+      gap: 4px;
+    }
+  }
+
+  .zoom-modal {
+    width: 90vw;
+    max-width: 400px;
+    height: auto;
+    padding: 10px;
+  }
+
+  .zoom-content {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .zoom-info {
+    h3 {
+      font-size: 1rem;
+    }
+
+    p,
+    .summary,
+    .zoom-info .btn {
+      font-size: 0.7rem;
+    }
+
+    .info-tags,
+    .info-extra {
+      gap: 4px;
+
+      .tag {
+        font-size: 0.6rem;
+        padding: 2px 5px;
+      }
+    }
+  }
+
+  .zoom-carousel {
+    display: none;
+  }
+
+  .btn-back {
+    font-size: 0.7rem;
+    padding: 5px 10px;
+  }
+
+  .game-card {
+    aspect-ratio: 1 / 1;
+  }
+
+  .game-tag,
+  .status-tag {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+  }
+
+  .status-wrapper {
+    flex-direction: row;
+    align-items: flex-start;
+    margin-top: 4px;
+    gap: 4px;
+  }
+
+  .delete-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .zoom-nav {
+    display: none;
+  }
 }

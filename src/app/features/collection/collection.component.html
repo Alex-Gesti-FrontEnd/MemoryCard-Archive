@@ -1,5 +1,5 @@
 <section class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="page-header mb-3">
     <h2 class="page-title">My Collection</h2>
     <div class="collection-stats d-flex gap-3 align-items-center">
       <div
@@ -247,14 +247,14 @@
       </div>
       <div class="close-btn" (click)="closeZoom()">✕</div>
     </div>
-    <div class="zoom-nav prev" *ngIf="getCurrentIndex() > 0" (click)="showPreviousGame()"><</div>
+    <!--- <div class="zoom-nav prev" *ngIf="getCurrentIndex() > 0" (click)="showPreviousGame()"><</div>
     <div
       class="zoom-nav next"
       *ngIf="getCurrentIndex() < filteredGames().length - 1"
       (click)="showNextGame()"
     >
       >
-    </div>
+    </div> --->
   </div>
 
   <!-- MODAL DELETE -->

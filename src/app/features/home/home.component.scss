@@ -526,12 +526,119 @@ select {
   background: rgba(99, 110, 114, 0.9);
 }
 
+.sidebar-close {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  .btn {
-    font-size: 0.85rem;
+  .page-title {
+    font-size: clamp(1rem, 5vw, 1.75rem);
   }
 
-  h2 {
-    font-size: 1.25rem;
+  .search-container {
+    flex-direction: column;
+    gap: 10px;
+
+    input {
+      width: 100%;
+    }
+  }
+
+  .apply-btn,
+  .filters-btn {
+    width: 100%;
+    padding: clamp(8px, 2.5vw, 12px);
+    font-size: clamp(0.85rem, 2.8vw, 1rem);
+  }
+
+  .games-grid {
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 120px));
+  }
+
+  .game-card {
+    border-radius: 8px;
+  }
+
+  .game-info {
+    h6 {
+      font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+    }
+
+    p {
+      font-size: clamp(0.6rem, 2vw, 0.75rem);
+    }
+  }
+
+  .page-btn {
+    padding: 6px 8px;
+    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+  }
+
+  .filters-sidebar {
+    width: 100%;
+    left: -100%;
+  }
+
+  .filters-sidebar.open {
+    left: 0;
+  }
+
+  .gameinfo-sidebar {
+    width: 100%;
+  }
+
+  .hero-content h4 {
+    font-size: clamp(1rem, 4vw, 1.3rem);
+  }
+
+  .hero-content p {
+    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+  }
+
+  .summary {
+    font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+  }
+
+  .selectors {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .game-body .btn {
+    font-size: clamp(0.85rem, 2.8vw, 1rem);
+    padding: clamp(8px, 2.5vw, 12px);
+  }
+
+  .active-tag {
+    font-size: clamp(0.65rem, 2.5vw, 0.8rem);
+  }
+
+  .sidebar-close {
+    display: block;
+
+    position: absolute;
+    top: 12px;
+    right: 14px;
+
+    background: transparent;
+    border: none;
+    color: #fff;
+
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    cursor: pointer;
+    z-index: 1000;
+
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #5dc4ff;
+      transform: scale(1.1);
+    }
+
+    &:active {
+      color: #397ca3;
+      transform: scale(1.5);
+    }
   }
 }
