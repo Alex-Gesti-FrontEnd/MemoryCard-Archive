@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class GamesService {
-  private apiUrl = 'https://memorycard-archive-production.up.railway.app/api/games';
+  private apiUrl = 'https://memorycard-archive.onrender.com/api/games';
 
   games = signal<GameModel[]>([]);
 

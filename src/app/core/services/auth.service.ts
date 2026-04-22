@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 export class AuthService {
   private http = inject(HttpClient);
 
-  private api = 'https://memorycard-archive-production.up.railway.app/api/auth';
+  private api = 'https://memorycard-archive.onrender.com/api/auth';
 
   token = signal<string | null>(localStorage.getItem('token'));
   userEmail = signal<string | null>(localStorage.getItem('email'));

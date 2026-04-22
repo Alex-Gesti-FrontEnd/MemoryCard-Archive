@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class MapService {
-  private api = 'https://memorycard-archive-production.up.railway.app/api/games';
+  private api = 'https://memorycard-archive.onrender.com/api/games';
 
   constructor(private http: HttpClient) {}
 
