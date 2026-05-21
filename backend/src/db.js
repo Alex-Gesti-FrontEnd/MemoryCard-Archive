@@ -15,3 +15,5 @@ export const pool = new Pool({
     rejectUnauthorized: false,
   },
 });
+
+export const getConnection = () => pool;
