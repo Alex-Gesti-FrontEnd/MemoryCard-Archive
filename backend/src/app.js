@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/games', gamesRouter);
-app.use('/api/reminders', remindersRouter);
+//app.use('/api/reminders', remindersRouter);
 app.use('/api/auth', authRouter);
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'API backend funcionando' }));

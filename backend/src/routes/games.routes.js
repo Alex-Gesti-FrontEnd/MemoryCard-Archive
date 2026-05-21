@@ -1,5 +1,5 @@
 import express from 'express';
-import { getConnection } from '../db.js';
+import { pool } from '../db.js';
 import { getPopularGames, searchGameByName } from '../services/igdb.service.js';
 import { searchGameStores } from '../services/overpass.service.js';
 import { reverseGeocodeOSM } from '../services/geocoding.service.js';
@@ -103,11 +103,11 @@ router.get('/igdb/platforms', async (req, res) => {
 // Routes for local games database
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const connection = await getConnection();
-
     const userId = req.user.id;
 
-    const [rows] = await connection.query('SELECT * FROM games WHERE user_id = ?', [userId]);
+    const result = await pool.query('SELECT * FROM games WHERE user_id = $1', [userId]);
+
+    const rows = result.rows;
 
     const formatted = rows.map((game) => ({
       ...game,
@@ -122,7 +122,6 @@ router.get('/', authMiddleware, async (req, res) => {
     }));
 
     res.json(formatted);
-    await connection.end();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error retrieving games', error: error.message });
@@ -152,15 +151,16 @@ router.post('/', authMiddleware, async (req, res) => {
   } = req.body;
 
   try {
-    const connection = await getConnection();
     const userId = req.user.id;
 
-    const [result] = await connection.query(
+    const result = await pool.query(
       `
       INSERT INTO games 
       (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type,
        summary, rating, screenshots, artworks, companies, startedAt, completedAt, favorite)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES
+      ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+      RETURNING id
       `,
       [
         userId,
@@ -185,9 +185,7 @@ router.post('/', authMiddleware, async (req, res) => {
       ],
     );
 
-    await connection.end();
-
-    res.status(201).json({ id: result.insertId, ...req.body });
+    res.status(201).json({ id: result.rows[0].id, ...req.body });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error adding game', error: err.message });
@@ -219,39 +217,41 @@ router.put('/:id', authMiddleware, async (req, res) => {
   } = req.body;
 
   try {
-    const connection = await getConnection();
     const userId = req.user.id;
+
     const formattedReleaseDate = releaseDate
       ? new Date(releaseDate).toISOString().split('T')[0]
       : null;
+
     const formattedStartedAt = startedAt ? new Date(startedAt).toISOString().split('T')[0] : null;
+
     const formattedCompletedAt = completedAt
       ? new Date(completedAt).toISOString().split('T')[0]
       : null;
 
-    await connection.query(
+    await pool.query(
       `
       UPDATE games 
       SET 
-        name=?,
-        platform=?,
-        region=?,
-        genre=?,
-        releaseDate=?,
-        image=?,
-        status=?,
-        format=?,
-        game_url=?,
-        game_type=?,
-        summary=?,
-        rating=?,
-        screenshots=?,
-        artworks=?,
-        companies=?,
-        startedAt=?,
-        completedAt=?,
-        favorite=?
-      WHERE id=? AND user_id=?
+        name=$1,
+        platform=$2,
+        region=$3,
+        genre=$4,
+        releaseDate=$5,
+        image=$6,
+        status=$7,
+        format=$8,
+        game_url=$9,
+        game_type=$10,
+        summary=$11,
+        rating=$12,
+        screenshots=$13,
+        artworks=$14,
+        companies=$15,
+        startedAt=$16,
+        completedAt=$17,
+        favorite=$18
+      WHERE id=$19 AND user_id=$20
       `,
       [
         name,
@@ -277,8 +277,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
       ],
     );
 
-    await connection.end();
-
     res.json({ id, ...req.body });
   } catch (err) {
     console.error(err);
@@ -288,16 +286,9 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const connection = await getConnection();
-
     const userId = req.user.id;
 
-    await connection.query('DELETE FROM games WHERE id = ? AND user_id = ?', [
-      req.params.id,
-      userId,
-    ]);
-
-    await connection.end();
+    await pool.query('DELETE FROM games WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
 
     res.status(204).send();
   } catch (err) {
