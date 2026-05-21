@@ -111,7 +111,9 @@ router.get('/', authMiddleware, async (req, res) => {
 
     const formatted = rows.map((game) => ({
       ...game,
-      releaseDate: game.releaseDate || null,
+      releaseDate: game.release_date || null,
+      startedAt: game.started_at,
+      completedAt: game.completed_at,
       screenshots:
         typeof game.screenshots === 'string'
           ? JSON.parse(game.screenshots)
@@ -134,7 +136,7 @@ router.post('/', authMiddleware, async (req, res) => {
     platform,
     region,
     genre,
-    releaseDate,
+    releaseate,
     image,
     status,
     format,
@@ -156,8 +158,8 @@ router.post('/', authMiddleware, async (req, res) => {
     const result = await pool.query(
       `
       INSERT INTO games 
-      (user_id, name, platform, region, genre, releaseDate, image, status, format, game_url, game_type,
-       summary, rating, screenshots, artworks, companies, startedAt, completedAt, favorite)
+      (user_id, name, platform, region, genre, release_date, image, status, format, game_url, game_type,
+       summary, rating, screenshots, artworks, companies, started_at, completed_at, favorite)
       VALUES
       ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       RETURNING id
@@ -237,7 +239,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
         platform=$2,
         region=$3,
         genre=$4,
-        releaseDate=$5,
+        release_date=$5,
         image=$6,
         status=$7,
         format=$8,
@@ -248,8 +250,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
         screenshots=$13,
         artworks=$14,
         companies=$15,
-        startedAt=$16,
-        completedAt=$17,
+        started_at=$16,
+        completed_at=$17,
         favorite=$18
       WHERE id=$19 AND user_id=$20
       `,
