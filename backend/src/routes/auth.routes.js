@@ -15,19 +15,19 @@ router.post('/register', async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
 
-    const [result] = await connection.query('INSERT INTO users (email, password) VALUES (?, ?)', [
-      email,
-      hash,
-    ]);
-
-    await connection.end();
+    const result = await connection.query(
+      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id',
+      [email, hash],
+    );
 
     res.status(201).json({
-      id: result.insertId,
+      id: result.rows[0].id,
       email,
     });
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
+    console.error(err);
+
+    if (err.code === '23505') {
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -44,9 +44,9 @@ router.post('/login', async (req, res) => {
   try {
     const connection = await getConnection();
 
-    const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
+    const result = await connection.query('SELECT * FROM users WHERE email = $1', [email]);
 
-    await connection.end();
+    const rows = result.rows;
 
     if (!rows.length) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -67,6 +67,8 @@ router.post('/login', async (req, res) => {
       userId: user.id,
     });
   } catch (err) {
+    console.error(err);
+
     res.status(500).json({
       message: 'Login error',
       error: err.message,
