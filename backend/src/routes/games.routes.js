@@ -136,7 +136,7 @@ router.post('/', authMiddleware, async (req, res) => {
     platform,
     region,
     genre,
-    releaseate,
+    releaseDate,
     image,
     status,
     format,
